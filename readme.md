@@ -4,6 +4,10 @@
 | Social Media   	| Facebook              	| Access Token       	| EAACEdEose0cBA[0-9A-Za-z]+                                     	|
 | Social Media   	| Google                	| API KEY            	| AIza[0-9A-Za-z-_]{35}                                          	|
 | Social Media   	| Gmail                 	| OAuth Id           	| [0-9(+-[0-9A-Za-z_]{32}\.apps\.qooqleusercontent\.com          	|
+| Social Media   	| LinkedIn                 	| OAuth Id           	| undocumented/random opaque string          	|
+ |
+| Social Media   	| GitHub                 	| OAuth Id           	| [0-9a-fA-F]{40}        	|
+ |
 | Finance        	| Picatic               	| API Key            	| sk_live_[0-9a-z]{32}                                           	|
 | Finance        	| Stripe                	| Standard API Key   	| sk_live_(0-9a-zA-Z]{24}                                        	|
 | Finance        	| Stripe                	| Restricted API Key 	| rk_live_[0-9a-zA-Z]{24}                                        	|
@@ -15,6 +19,9 @@
 | Communications 	| Twilio                	| API Key            	| 55[0-9a-fA-F]{32}                                              	|
 | Communications 	| MailGun               	| API Key            	| key-[0-9a-zA-Z]{32}                                            	|
 | Communications 	| MailChimp             	| API Key            	| [0-9a-f]{32}-us[0-9]{1,2}                                      	|
+| Communications 	| Slack             	| API Key            	| xox.-[0-9]{12}-[0-9]{12}-[0-9a-zA-Z]{24}                                   	|
+
 | Storage        	| Google Drive          	| See Youtube        	| See Youtube                                                    	|
 | IaaS           	| Amazon AWS            	| Access Key ID      	| AKIA[0-9A-Z]{16}                                               	|
-| IaaS           	| Google Cloud Platform 	| See Youtube        	| See Youtube                                                    	|
+| IaaS           	| Google Cloud Platform 	| OAuth Token       	| [0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}                                                    	|
+| IaaS           	| Heroku	| See Youtube        	| See Youtube                                                    	| 
