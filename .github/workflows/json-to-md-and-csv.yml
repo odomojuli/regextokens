@@ -1,0 +1,61 @@
+namoe: Convert JSON to MarkDown and CSV
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'regex.json'
+  workflow_dispatch:
+
+jobs:
+  convert:
+    environment: actions
+    runs-on: ubuntu-latest
+    steps:
+      steps:
+        - name: Checkout
+          uses: actions/checkout@master
+
+        - name: Convert JSON to CSV
+          run: |
+            jq -r '.[] |
+              [
+                ."Domain",
+                ."Platform/API",
+                ."Key Type",
+                ."Target Regular Expression",
+                ."Source"
+              ] | @csv
+            ' regex.json > regex.csv
+
+        - name: Convert JSON to MarkDown
+          run: |
+            pip install mdformat-gfm
+            echo '|Domain|Platform/API|Key Type|Target Regular Expression|Source|' > readme.md
+            echo '|------|------------|--------|-------------------------|------|' >> readme.md
+            jq -r '.[] |
+              [
+                "",
+                ."Domain",
+                ."Platform/API",
+                ."Key Type",
+                ."Target Regular Expression",
+                ."Source",
+                ""] | join("|")
+            ' regex.json >> readme.md
+            mdformat readme.md
+
+        - name: Commit
+          run: |
+            if git update-index --refresh >/dev/null; then
+                echo "(nothing to do)"
+            else
+              git config user.name "GitHub Action"
+              git config user.email "action@github.com"
+              git remote set-url origin "https://${{ github.repository_owner }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+              git checkout master
+              git add .
+              git commit -m "Update"
+              git push origin master
+            fi
