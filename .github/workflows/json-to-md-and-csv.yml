@@ -3,7 +3,7 @@ namoe: Convert JSON to MarkDown and CSV
 on:
   push:
     branches:
-      - main
+      - 'master'
     paths:
       - 'regex.json'
   workflow_dispatch:
