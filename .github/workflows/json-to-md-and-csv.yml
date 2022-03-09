@@ -41,7 +41,8 @@ jobs:
               ."Key Type",
               ."Target Regular Expression",
               ."Source",
-              ""] | join("|")
+              ""
+            ] | join("|")
           ' regex.json >> readme.md
           mdformat readme.md
 
