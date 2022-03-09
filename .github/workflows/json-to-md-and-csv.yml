@@ -39,7 +39,10 @@ jobs:
               ."Domain",
               ."Platform/API",
               ."Key Type",
-              ."Target Regular Expression",
+              (."Target Regular Expression" |
+                 sub("\\|"; "\\|"; "g") |
+                 sub("_"; "\\_"; "g")
+              ),
               ."Source",
               ""
             ] | join("|")
