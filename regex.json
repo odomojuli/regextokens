@@ -3,7 +3,7 @@
    "Domain": "Social Media",
    "Platform/API": "Twitter",
    "Key Type": "Access Token",
-   "Target Regular Expression": "[1-9][ 0-9]+-[0-9a-zA-Z]{40}",
+   "Target Regular Expression": "[1-9][0-9]+-[0-9a-zA-Z]{40}",
    "Source": ""
  },
  {
@@ -25,14 +25,14 @@
    "Platform/API": "Facebook",
    "Key Type": "OAuth 2.0",
    "Target Regular Expression": "[A-Za-z0-9]{125} (counting letters [2])",
-   "Source": "https://developers.facebook.com/docs/facebook-login/access-tokens/"
+   "Source": " https://developers.facebook.com/docs/facebook-login/access-tokens/"
  },
  {
    "Domain": "Social Media",
    "Platform/API": "Instagram",
    "Key Type": "OAuth 2.0",
    "Target Regular Expression": "[0-9a-fA-F]{7}\\.[0-9a-fA-F]{32}",
-   "Source": "https://www.instagram.com/developer/authentication/"
+   "Source": " https://www.instagram.com/developer/authentication/"
  },
  {
    "Domain": "Social Media",
@@ -88,7 +88,7 @@
    "Platform/API": "GitHub",
    "Key Type": "OAuth 2.0 ID",
    "Target Regular Expression": "[A-Za-z0-9_]{255}",
-   "Source": "https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/"
+   "Source": " https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/"
  },
  {
    "Domain": "Social Media",
@@ -177,16 +177,37 @@
  {
    "Domain": "Communications",
    "Platform/API": "Slack",
-   "Key Type": "API Key",
-   "Target Regular Expression": "xox[baprs]-[0-9]{12}-[0-9]{12}-[0-9a-zA-Z]{24}",
-   "Source": ""
+   "Key Type": "OAuth v2 Bot Access Token",
+   "Target Regular Expression": "xoxb-[0-9]{11}-[0-9]{11}-[0-9a-zA-Z]{24}",
+   "Source": "https://api.slack.com/authentication/oauth-v2"
  },
  {
    "Domain": "Communications",
    "Platform/API": "Slack",
-   "Key Type": "Access Token",
+   "Key Type": "OAuth v2 User Access Token",
+   "Target Regular Expression": "xoxp-[0-9]{11}-[0-9]{11}-[0-9a-zA-Z]{24}",
+   "Source": "https://api.slack.com/authentication/oauth-v2"
+ },
+ {
+   "Domain": "Communications",
+   "Platform/API": "Slack",
+   "Key Type": "OAuth v2 Configuration Token",
+   "Target Regular Expression": "xoxe.xoxp-1-[0-9a-zA-Z]{166}",
+   "Source": "https://api.slack.com/authentication/rotation"
+ },
+ {
+   "Domain": "Communications",
+   "Platform/API": "Slack",
+   "Key Type": "OAuth v2 Refresh Token",
+   "Target Regular Expression": "xoxe-1-[0-9a-zA-Z]{147}",
+   "Source": "https://api.slack.com/authentication/rotation"
+ },
+ {
+   "Domain": "Communications",
+   "Platform/API": "Slack",
+   "Key Type": "Webhook",
    "Target Regular Expression": "T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}",
-   "Source": "https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}"
+   "Source": "https://api.slack.com/messaging/webhooks"
  },
  {
    "Domain": "Cloud",
