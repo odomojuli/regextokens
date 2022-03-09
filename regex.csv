@@ -24,8 +24,11 @@ Finance,Amazon Marketing Services,Auth Token         	,"amzn\.mws\.[0-9a-f]{8}-[
 Communications,Twilio                	,API Key            	,55[0-9a-fA-F]{32},                                                                                  	
 Communications,MailGun               	,API Key            	,key-[0-9a-zA-Z]{32},                                                                                  	
 Communications,MailChimp             	,API Key            	,"[0-9a-f]{32}-us[0-9]{1,2}",                                                                                  	
-Communications,Slack                 	,API Key            	,xox[baprs]-[0-9]{12}-[0-9]{12}-[0-9a-zA-Z]{24},                                                                                  	
-Communications,Slack                 	,Access Token            	,T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24},https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}
+Communications,Slack                 	,OAuth v2 Bot Access Token,xoxb-[0-9]{11}-[0-9]{11}-[0-9a-zA-Z]{24},https://api.slack.com/authentication/oauth-v2
+Communications,Slack                 	,OAuth v2 User Access Token,xoxp-[0-9]{11}-[0-9]{11}-[0-9a-zA-Z]{24},https://api.slack.com/authentication/oauth-v2
+Communications,Slack                 	,OAuth v2 Configuration Token,xoxe.xoxp-1-[0-9a-zA-Z]{166},https://api.slack.com/authentication/rotation
+Communications,Slack                 	,OAuth v2 Refresh Token,xoxe-1-[0-9a-zA-Z]{147},https://api.slack.com/authentication/rotation
+Communications,Slack                 	,Webhook,T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24},https://api.slack.com/messaging/webhooks
 Cloud,Amazon Web Services   	,Access Key ID      	,AKIA[0-9A-Z]{16},                                                                                  	
 Cloud,Amazon Web Services   	,Secret Key         	,[0-9a-zA-Z/+]{40},                                                                                  	
 Cloud,Google Cloud Platform,OAuth 2.0,[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12},                                                                                  	
