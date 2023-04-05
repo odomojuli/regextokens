@@ -13,7 +13,7 @@ Platform/API | Type | Target Regular Expression | Source
  Google | OAuth 2.0 Auth Code | 4/[0-9A-Za-z\-_]+ | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
  Google | OAuth 2.0 Refresh Token | 1/[0-9A-Za-z\-_]{43}\|1/[0-9A-Za-z\-_]{64} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
  Google | OAuth 2.0 Access Token | ya29\.[0-9A-Za-z\-_]+ | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
- GitHub | OAuth 2.0 ID | [A-Za-z0-9_]{255} | https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/
+ GitHub | OAuth 2.0 ID | gh[pousr]_[a-zA-Z0-9]{36} | https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/
  Mapbox | Public Key | ([s,p]k.eyJ1Ijoi[\w\.-]+) | https://grep.app/search?q=%28%5Bs%2Cp%5Dk.eyJ1Ijoi%5B%5Cw%5C.-%5D%2B%29&regexp=true
 Mapbox | Secret Key | ([s,p]k.eyJ1Ijoi[\w\.-]+) | https://grep.app/search?q=%28%5Bs%2Cp%5Dk.eyJ1Ijoi%5B%5Cw%5C.-%5D%2B%29&regexp=true
  Foursquare | Client Key | [0-9a-zA-Z_][5,31] | 
