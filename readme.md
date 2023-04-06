@@ -13,9 +13,12 @@ Platform/API | Type | Target Regular Expression | Source
  Google | OAuth 2.0 Auth Code | 4/[0-9A-Za-z\-_]+ | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
  Google | OAuth 2.0 Refresh Token | 1/[0-9A-Za-z\-_]{43}\|1/[0-9A-Za-z\-_]{64} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
  Google | OAuth 2.0 Access Token | ya29\.[0-9A-Za-z\-_]+ | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
- GitHub | OAuth 2.0 ID | [A-Za-z0-9_]{255} | https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/
- Mapbox | Public Key | ([s,p]k.eyJ1Ijoi[\w\.-]+) | https://grep.app/search?q=%28%5Bs%2Cp%5Dk.eyJ1Ijoi%5B%5Cw%5C.-%5D%2B%29&regexp=true
-Mapbox | Secret Key | ([s,p]k.eyJ1Ijoi[\w\.-]+) | https://grep.app/search?q=%28%5Bs%2Cp%5Dk.eyJ1Ijoi%5B%5Cw%5C.-%5D%2B%29&regexp=true
+ GitHub | Personal Access Token (Classic) | ^ghp_[a-zA-Z0-9]{36}$ | https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
+ GitHub | Personal Access Token (Fine-Grained) | ^github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}$ |https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-fine-grained-personal-access-token
+ GitHub | OAuth 2.0 Access Token | ^gho_[a-zA-Z0-9]{36}$ | https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps
+ GitHub | User-to-Server Access Token | ^ghu_[a-zA-Z0-9]{36}$ | https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user
+ GitHub | Server-to-Server Token | ^ghs_[a-zA-Z0-9]{36}$ | https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/about-authentication-with-a-github-app#authenticating-as-an-installation
+ GitHub | Refresh Token | ^ghr_[a-zA-Z0-9]{36}$ | https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokensox | Secret Key | ([s,p]k.eyJ1Ijoi[\w\.-]+) | https://grep.app/search?q=%28%5Bs%2Cp%5Dk.eyJ1Ijoi%5B%5Cw%5C.-%5D%2B%29&regexp=true
  Foursquare | Client Key | [0-9a-zA-Z_][5,31] | 
  Foursquare | Secret Key | R_[0-9a-f]{32} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
  Picatic | API Key | sk_live_[0-9a-z]{32} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
