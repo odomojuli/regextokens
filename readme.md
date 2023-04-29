@@ -9,15 +9,15 @@ Instagram | OAuth 2.0 | [0-9a-fA-F]{7}\.[0-9a-fA-F]{32} | https://www.instagram.
 Instagram | Username | (?:@)([A-Za-z0-9_]\(?:(?:[A-Za-z0-9_]\|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?) | https://blog.jstassen.com/2016/03/code-regex-for-instagram-username-and-hashtags/
 Instagram | Hashtag | (?:#)([A-Za-z0-9_]\(?:(?:[A-Za-z0-9_]\|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?) | https://blog.jstassen.com/2016/03/code-regex-for-instagram-username-and-hashtags/
 Google | API Key | AIza[0-9A-Za-z-_]{35} |
-Google | Firebase apiKey | `AIza[0-9A-Za-z-_]{35}` |
-Google | Firebase authDomain | `([a-z0-9-]){1,30}(\.firebaseapp\.com)` |
-Google | Firebase databaseURL | `(http|https):\/\/([a-z0-9-]){1,30}(\.firebaseio\.com)` or `(http|https):\/\/([a-z0-9-]){1,30}(\.firebaseio\.com)` or `([a-z0-9-]){1,30}-(default-rtdb).((asia|europe|us|australia)|((north|south)(america|africa)))-((east|west|central|north|south)|((north|south)(east)))[0-9]{1,2}(\.firebasedatabase\.app)`
-Google | Firebase projectId | `([a-z0-9-]){1,30}` |
-Google | Firebase storageBucket | `([a-z0-9-]){1,30}(\.appspot\.com)` |
-| Google | Firebase locationId | `((asia|europe|us|australia)|((north|south)(america|africa)))-((east|west|central|north|south)|((north|south)(east)))` |
-Google | Firebase messagingSenderId | `(\d){10,20}` |
-Google | Firebase appId | `1:(\d){10,20}:(android|web|ios):([a-f0-9]){22}` |
-Google | Firebase measurementId | `G-(\w{4,5})` |
+Google | Firebase apiKey | ```AIza[0-9A-Za-z-_]{35}``` |
+Google | Firebase authDomain | ```([a-z0-9-]){1,30}(\.firebaseapp\.com)``` |
+Google | Firebase databaseURL | ```(http|https):\/\/([a-z0-9-]){1,30}(\.firebaseio\.com)``` or ```(http|https):\/\/([a-z0-9-]){1,30}(\.firebaseio\.com)``` or ```([a-z0-9-]){1,30}-(default-rtdb).((asia|europe|us|australia)|((north|south)(america|africa)))-((east|west|central|north|south)|((north|south)(east)))[0-9]{1,2}(\.firebasedatabase\.app)```
+Google | Firebase projectId | ```([a-z0-9-]){1,30}``` |
+Google | Firebase storageBucket | ```([a-z0-9-]){1,30}(\.appspot\.com)``` |
+| Google | Firebase locationId | ```((asia|europe|us|australia)|((north|south)(america|africa)))-((east|west|central|north|south)|((north|south)(east)))``` |
+Google | Firebase messagingSenderId | ```(\d){10,20}``` |
+Google | Firebase appId | ```1:(\d){10,20}:(android|web|ios):([a-f0-9]){22}``` |
+Google | Firebase measurementId | ```G-(\w{4,5})``` |
 Google | OAuth 2.0 Secret | [0-9a-zA-Z\-_]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
 Google | OAuth 2.0 Auth Code | 4/[0-9A-Za-z\-_]+ | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
 Google | OAuth 2.0 Refresh Token | 1/[0-9A-Za-z\-_]{43}\|1/[0-9A-Za-z\-_]{64} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
