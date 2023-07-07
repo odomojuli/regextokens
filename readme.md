@@ -22,8 +22,8 @@ Platform/API | Type | Target Regular Expression | Source
  Foursquare | Client Key | [0-9a-zA-Z_][5,31] | 
  Foursquare | Secret Key | R_[0-9a-f]{32} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
  Picatic | API Key | sk_live_[0-9a-z]{32} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
- Stripe | Standard API Key | sk_live_(0-9a-zA-Z]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
- Stripe | Restricted API Key | sk_live_(0-9a-zA-Z]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+ Stripe | Standard API Key | sk_live_[0-9a-zA-Z]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+ Stripe | Restricted API Key | sk_live_[0-9a-zA-Z]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
  Square | Access Token | sqOatp-[0-9A-Za-z\-_]{22} | https://developer.squareup.com/reference/square/oauth-api/obtaintoken
  Square | OAuth Secret | q0csp-[ 0-9A-Za-z\-_]{43} | https://developer.squareup.com/reference/square/oauth-api/obtaintoken
  Paypal / Braintree | Access Token | access_token\,production\$[0-9a-z]{161[0-9a,]{32} | 
