@@ -1,5 +1,5 @@
-Platform/API | Type | Target Regular Expression | Source
-| ---|---|---|---
+| Platform/API | Type | Target Regular Expression | Source |
+| --- | --- | --- | --- |
 | Twitter | Access Token | [1-9][ 0-9]+-[0-9a-zA-Z]{40} | 
 | Twitter | Username | /(^\|[^@\w])@(\w{1,15})\b/ | https://stackoverflow.com/a/13398311
 | Twitter | Tweets | View source. | https://github.com/twitter/twitter-text/blob/master/rb/lib/twitter-text/regex.rb
@@ -28,11 +28,13 @@ Platform/API | Type | Target Regular Expression | Source
 | GitHub | User-to-Server Access Token | ^ghu_[a-zA-Z0-9]{36}$ | https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user
 | GitHub | Server-to-Server Token | ^ghs_[a-zA-Z0-9]{36}$ | https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/about-authentication-with-a-github-app#authenticating-as-an-installation
 | GitHub | Refresh Token | ^ghr_[a-zA-Z0-9]{36}$ | https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokensox | Secret Key | ([s,p]k.eyJ1Ijoi[\w\.-]+) | https://grep.app/search?q=%28%5Bs%2Cp%5Dk.eyJ1Ijoi%5B%5Cw%5C.-%5D%2B%29&regexp=true
-| Foursquare | Client Key | [0-9a-zA-Z_][5,31] | 
+| Mapbox | Public Key | ([s,p]k.eyJ1Ijoi[\w\.-]+) | https://grep.app/search?q=%28%5Bs%2Cp%5Dk.eyJ1Ijoi%5B%5Cw%5C.-%5D%2B%29&regexp=true
+| Mapbox | Secret Key | ([s,p]k.eyJ1Ijoi[\w\.-]+) | https://grep.app/search?q=%28%5Bs%2Cp%5Dk.eyJ1Ijoi%5B%5Cw%5C.-%5D%2B%29&regexp=true
+| Foursquare | Client Key | [0-9a-zA-Z_][5,31] | |
 | Foursquare | Secret Key | R_[0-9a-f]{32} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
 | Picatic | API Key | sk_live_[0-9a-z]{32} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
-| Stripe | Standard API Key | sk_live_(0-9a-zA-Z]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
-| Stripe | Restricted API Key | sk_live_(0-9a-zA-Z]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+| Stripe | Standard API Key | sk_live_[0-9a-zA-Z]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+| Stripe | Restricted API Key | sk_live_[0-9a-zA-Z]{24} | https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
 | Square | Access Token | sqOatp-[0-9A-Za-z\-_]{22} | https://developer.squareup.com/reference/square/oauth-api/obtaintoken
 | Square | OAuth Secret | q0csp-[ 0-9A-Za-z\-_]{43} | https://developer.squareup.com/reference/square/oauth-api/obtaintoken
 | Paypal / Braintree | Access Token | access_token\,production\$[0-9a-z]{161[0-9a,]{32} | 
