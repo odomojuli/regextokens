@@ -1,3 +1,10 @@
+# Base64
+## Format
+```
+^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$
+```
+* [How to check whether a string is Base64 encoded or not](https://stackoverflow.com/a/8571649)
+
 # Twitter
 ## Access Token
 ```
