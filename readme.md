@@ -234,3 +234,24 @@ AKIA[0-9A-Z]{16}
 ```
 [0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
 ```
+
+# OpenAI
+## User API Key
+```
+sk-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
+```
+
+## User Project Key
+```
+sk-proj-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
+```
+
+## Service ID
+```
+^[A-Za-z0-9]+(-*[A-Za-z0-9]+)*$
+```
+
+## Service Key
+```
+sk-{SERVICE ID}-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
+```
