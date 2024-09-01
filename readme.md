@@ -129,9 +129,9 @@ sk_live_[0-9a-zA-Z]{24}
 * https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
 ## Restricted API Key
 ```
-sk_live_[0-9a-zA-Z]{24}
+rk_live_[0-9a-zA-Z]{99}
 ```
-* https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+* [Stripe API Keys Documentation](https://docs.stripe.com/keys)
 
 # Square
 ## Access Token
