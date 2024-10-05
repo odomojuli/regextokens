@@ -255,3 +255,9 @@ sk-proj-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
 ```
 sk-{SERVICE ID}-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
 ```
+
+# WakaTime
+## API Key
+```
+waka_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
+```
