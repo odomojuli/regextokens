@@ -13,7 +13,7 @@
 | Google | Firebase authDomain | ([a-z0-9-]){1,30}(\.firebaseapp\.com) |  |
 | Google | Firebase databaseURL | `(http\|https):\/\/([a-z0-9-]){1,30}(\.firebaseio\.com)` or `(http\|https):\/\/([a-z0-9-]){1,30}(\.firebaseio\.com)` or `([a-z0-9-]){1,30}-(default-rtdb).((asia\|europe\|us\|australia)\|((north\|south)(america\|africa)))-((east\|west\|central\|north\|south)\|((north\|south)(east)))[0-9]{1,2}(\.firebasedatabase\.app)`
 | Google | Firebase projectId | ([a-z0-9-]){1,30} |
-| Google | Firebase storageBucket | ([a-z0-9-]){1,30}(\.appspot\.com) |  |
+| Google | Firebase storageBucket | `([a-z0-9-]){1,30}(\.appspot\.com)` or `([a-z0-9-]){1,30}(\.firebasestorage\.app)` |  |
 | Google | Firebase locationId | ((asia\|europe\|us\|australia)\|((north\|south)(america\|africa)))-((east\|west\|central\|north\|south)\|((north\|south)(east))) |
 | Google | Firebase messagingSenderId | (\d){10,20} |
 | Google | Firebase appId | 1:(\d){10,20}:(android\|web\|ios):([a-f0-9]){10,22} |  |
