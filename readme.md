@@ -367,6 +367,30 @@ ASIA[0-9A-Z]{16}
 
 * [AWS Best Practices for Managing Access Keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#lock-away-credentials)
 
+## GitLab
+
+### Personal Access Token
+```
+glpat-[0-9a-zA-Z\-]{20}
+```
+* `glpat-` prefix introduced in GitLab 14.5 (Oct 2021) as the default for all new PATs.
+* [GitLab: Personal Access Tokens](https://docs.gitlab.com/user/profile/personal_access_tokens/)
+* [GitGuardian: GitLab Token Detector](https://docs.gitguardian.com/secrets-detection/secrets-detection-engine/detectors/specifics/gitlab_token)
+
+### Pipeline Trigger Token
+```
+glptt-[0-9a-zA-Z\-]{20}
+```
+* [GitLab: Token Overview](https://docs.gitlab.com/security/tokens/)
+
+### Runner Registration Token (Legacy) ⚠️
+```
+GR1348941[0-9a-zA-Z\-_]{20}
+```
+> ⚠️ Deprecated in GitLab 15.6; removed in 17.0. Retained for scanning legacy CI configs.
+
+* [GitLab: Token Overview](https://docs.gitlab.com/security/tokens/)
+
 
 # Google Cloud Platform
 ## OAuth 2.0
