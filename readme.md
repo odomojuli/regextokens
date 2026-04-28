@@ -190,6 +190,32 @@ sk_live_[0-9a-z]{32}
 ```
 * [NDSS 2019: How Bad Can It Git?](https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf)
 
+## Shopify
+
+### Custom App Admin API Access Token
+```
+shpat_[a-fA-F0-9]{32}
+```
+* [Shopify Community: Token prefix differences](https://community.shopify.com/t/difference-between-admin-api-access-token-starting-with-shpua-shpat-shpss-etc/144725)
+
+### Public App Access Token
+```
+shpca_[a-fA-F0-9]{32}
+```
+
+### Private App Access Token (Legacy) ⚠️
+```
+shppa_[a-fA-F0-9]{32}
+```
+> ⚠️ Legacy private app credentials, superseded by custom app tokens in 2022.
+
+### App Secret Key
+```
+shpss_[a-fA-F0-9]{32}
+```
+* [Shopify Dev Community: Admin Access Tokens](https://community.shopify.dev/t/new-shopify-dev-dashboard-and-admin-access-token/27645)
+* [Secretlint: Shopify Token Support Issue](https://github.com/secretlint/secretlint/issues/247)
+
 
 # Stripe
 ## Standard API Key
