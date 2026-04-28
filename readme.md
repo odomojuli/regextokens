@@ -53,30 +53,30 @@ sk-ant-api03-[a-zA-Z0-9_\-]{93,}
 
 * [Datadog Key Management API](https://docs.datadoghq.com/api/latest/key-management/)
 
+## Twitter / X ⚠️
 
-# Twitter
-## Access Token
+> **Partially deprecated.** Twitter became X in 2023. The v1.1 API and classic OAuth 1.0a flows were restructured; many legacy token formats remain valid in the API v2 tier but new apps use OAuth 2.0 / PKCE. Legacy patterns retained for historical scanning.
+
+### OAuth 1.0a Access Token
 ```
 [1-9][0-9]+-[0-9a-zA-Z]{40}
 ```
-## Username
-```
-/(^|[^@\w])@(\w{1,15})\b/
-```
-## Tweets
-[View source](https://github.com/twitter/twitter-text/blob/master/rb/lib/twitter-text/regex.rb)
+* Format: `{user_id}-{40-char alphanumeric secret}`
 
-# Facebook
-## Access Token
+### OAuth 2.0 Bearer Token (App-Only)
 ```
-EAACEdEose0cBA[0-9A-Za-z]+
+AAAA[A-Za-z0-9%]{80,}
 ```
-* https://grep.app/search?q=EAACEdEose0cBA%5B0-9A-Za-z%5D%2B&regexp=true
-## OAuth 2.0
+* App-only bearer tokens used for read-only endpoints. Typically 80–100+ URL-encoded Base64 characters beginning with `AAAA`.
+* [Twitter/X: OAuth 2.0 — Bearer Token](https://developer.twitter.com/en/docs/authentication/oauth-2-0/bearer-tokens)
+
+### Username
 ```
-[A-Za-z0-9]{125} (counting letters [2])
+(?:^|[^@\w])@(\w{1,15})\b
 ```
-* https://developers.facebook.com/docs/facebook-login/guides/access-tokens
+* [Twitter Text: Regex Library](https://github.com/twitter/twitter-text/blob/master/rb/lib/twitter-text/regex.rb)
+
+
 
 # Instagram
 ## OAuth 2.0
