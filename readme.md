@@ -5,6 +5,16 @@
 ```
 * [How to check whether a string is Base64 encoded or not](https://stackoverflow.com/a/8571649)
 
+## Anthropic (Claude)
+
+### API Key
+```
+sk-ant-api03-[a-zA-Z0-9_\-]{93,}
+```
+* Anthropic API keys use the `sk-ant-api03-` prefix. Keys are displayed once at generation time and cannot be retrieved again.
+* [GitGuardian: Claude API Key Detector](https://docs.gitguardian.com/secrets-detection/secrets-detection-engine/detectors/specifics/claude_api_key)
+* [Anthropic API Overview](https://platform.claude.com/docs/en/api/overview)
+
 # Twitter
 ## Access Token
 ```
