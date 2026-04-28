@@ -15,6 +15,25 @@ sk-ant-api03-[a-zA-Z0-9_\-]{93,}
 * [GitGuardian: Claude API Key Detector](https://docs.gitguardian.com/secrets-detection/secrets-detection-engine/detectors/specifics/claude_api_key)
 * [Anthropic API Overview](https://platform.claude.com/docs/en/api/overview)
 
+## Cloudflare 🆕
+
+### API Token
+```
+[A-Za-z0-9_\-]{40}
+```
+> ⚡ High FP Risk standalone — use with context keywords (`CF_API_TOKEN`, `cloudflare`) or the `Authorization: Bearer` header.
+
+* Cloudflare API Tokens are 40-character URL-safe Base64 strings, scoped to specific resources and permissions.
+* [Cloudflare: Create API Token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
+
+### Global API Key (Legacy)
+```
+[0-9a-f]{37}
+```
+> ⚠️ Deprecated in favor of scoped API Tokens. Still in wide use in legacy infrastructure.
+
+* [Cloudflare API Authentication](https://developers.cloudflare.com/api/)
+
 # Twitter
 ## Access Token
 ```
