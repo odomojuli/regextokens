@@ -256,6 +256,23 @@ key-[0-9a-zA-Z]{32}
 [0-9a-f]{32}-us[0-9]{1,2}
 ```
 
+## npm
+
+### Access Token (New Format, 2021+)
+```
+npm_[A-Za-z0-9]{36}
+```
+* npm introduced the `npm_` prefix in September 2021 to enable unambiguous secret scanning. The last 6 characters encode a CRC32 checksum (Base62) for automated false-positive reduction.
+* [GitHub Changelog: npm has a new access token format](https://github.blog/changelog/2021-09-23-npm-has-a-new-access-token-format/)
+* [npm Docs: About Access Tokens](https://docs.npmjs.com/about-access-tokens/)
+
+### Legacy Access Token (UUID format) ⚠️
+```
+[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
+```
+> ⚠️ Deprecated format. Replaced by `npm_` prefix tokens. Retained for scanning older `.npmrc` files and CI configs.
+
+
 # Slack
 ## OAuth v2 Bot Access Token
 ```
