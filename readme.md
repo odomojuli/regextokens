@@ -168,12 +168,28 @@ R_[0-9a-f]{32}
 ```
 * [NDSS 2019: How Bad Can It Git?](https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf)
 
-# Picatic
-## API Key
+## Picatic ⚠️
+
+> **Deprecated.** Picatic was acquired by Eventbrite in 2018 and subsequently shut down. Retained for scanning legacy codebases.
+>
+
+## SendGrid
+
+### API Key
+```
+SG\.[a-zA-Z0-9_\-]{22}\.[a-zA-Z0-9_\-]{43}
+```
+* SendGrid API keys are 69–70 characters in three dot-delimited segments: the `SG.` prefix, a 22-character identifier, and a 43-character secret component.
+* [SendGrid: API Keys](https://docs.sendgrid.com/ui/account-and-settings/api-keys)
+* [Gitleaks TOML: SendGrid pattern](https://github.com/Cyberwatch/cyberwatch_api_toolbox/blob/master/.gitleaks.toml)
+
+
+### API Key
 ```
 sk_live_[0-9a-z]{32}
 ```
-* https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+* [NDSS 2019: How Bad Can It Git?](https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf)
+
 
 # Stripe
 ## Standard API Key
