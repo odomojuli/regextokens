@@ -15,7 +15,7 @@ sk-ant-api03-[a-zA-Z0-9_\-]{93,}
 * [GitGuardian: Claude API Key Detector](https://docs.gitguardian.com/secrets-detection/secrets-detection-engine/detectors/specifics/claude_api_key)
 * [Anthropic API Overview](https://platform.claude.com/docs/en/api/overview)
 
-## Cloudflare 🆕
+## Cloudflare
 
 ### API Token
 ```
@@ -33,6 +33,26 @@ sk-ant-api03-[a-zA-Z0-9_\-]{93,}
 > ⚠️ Deprecated in favor of scoped API Tokens. Still in wide use in legacy infrastructure.
 
 * [Cloudflare API Authentication](https://developers.cloudflare.com/api/)
+
+## Datadog
+
+### API Key
+```
+[a-f0-9]{32}
+```
+> ⚡ High FP Risk — use with variable-name context: `DD_API_KEY`, `datadog_api_key`. Authenticate with header `DD-API-KEY`.
+
+* [Datadog API and Application Keys](https://docs.datadoghq.com/account_management/api-app-keys/)
+* [Datadog Authentication](https://docs.datadoghq.com/api/latest/authentication/)
+
+### Application Key
+```
+[a-f0-9]{40}
+```
+> Use with header `DD-APPLICATION-KEY`. Required for administrative endpoints.
+
+* [Datadog Key Management API](https://docs.datadoghq.com/api/latest/key-management/)
+
 
 # Twitter
 ## Access Token
