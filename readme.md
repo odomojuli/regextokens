@@ -256,6 +256,17 @@ sk-proj-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
 sk-{SERVICE ID}-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
 ```
 
+## Vercel 🆕
+
+### Personal Access Token (New Format, 2024+)
+```
+vcp_[a-zA-Z0-9]{24}
+```
+* Vercel introduced new prefixed token formats in 2024. Personal access tokens use `vcp_`. Leaked tokens in public repos/gists are now automatically revoked via GitHub secret scanning.
+* [Vercel: Introducing new token formats and secret scanning](https://vercel.com/changelog/new-token-formats-and-secret-scanning)
+* [GitGuardian: Vercel API Access Token](https://docs.gitguardian.com/secrets-detection/secrets-detection-engine/detectors/specifics/vercel_api_access_token)
+
+
 # WakaTime
 ## API Key
 ```
