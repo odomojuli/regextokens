@@ -152,16 +152,21 @@ ya29.[0-9A-Za-z-_]+
 ^ghr_[a-zA-Z0-9]{36}$
 ```
 
-# Foursquare
-## Client Key
+## Foursquare ⚠️
+
+> **Deprecated.** Foursquare retired its consumer-facing Places API for most use cases in 2020. Patterns retained for historical codebase scanning.
+
+### Client Key 🔧
 ```
-[0-9a-zA-Z_][5,31]
+[0-9a-zA-Z_]{5,31}
 ```
-## Secret Key
+> ⚡ High FP Risk — the original regex `[0-9a-zA-Z_][5,31]` was malformed (literal character class, not quantifier). Fixed to `{5,31}`.
+
+### Secret Key
 ```
 R_[0-9a-f]{32}
 ```
-* https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+* [NDSS 2019: How Bad Can It Git?](https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf)
 
 # Picatic
 ## API Key
