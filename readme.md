@@ -199,12 +199,22 @@ q0csp-[ 0-9A-Za-z-_]{43}
 ```
 * https://developer.squareup.com/reference/square/oauth-api/obtaintoken
 
+## PayPal / Braintree 🔧
 
-# PayPal / Braintree
-## Access Token
+### Braintree Access Token (Production)
 ```
-access_token,production$[0-9a-z]{161[0-9a,]{32}
+access_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32}
 ```
+> 🔧 The original pattern `access_token,production$[0-9a-z]{161[0-9a,]{32}` was completely malformed. This corrected version matches the documented Braintree OAuth token format.
+
+* [Braintree: OAuth Access Tokens](https://developer.paypal.com/braintree/docs/guides/extend/oauth/access-tokens/ruby/)
+* [Semgrep: PayPal Braintree Access Token Detector](https://semgrep.dev/r/generic.secrets.security.detected-paypal-braintree-access-token.detected-paypal-braintree-access-token)
+
+### Braintree Tokenization Key
+```
+[a-zA-Z0-9]+_[a-zA-Z0-9]+_[a-zA-Z0-9_]{20,}
+```
+* [Braintree: Tokenization Keys](https://developer.paypal.com/braintree/docs/guides/authorization/tokenization-key/javascript/v3/)
 
 # Amazon Marketing Services
 ## Auth Token
