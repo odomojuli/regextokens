@@ -235,28 +235,33 @@ AKIA[0-9A-Z]{16}
 [0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
 ```
 
-# OpenAI
-## User API Key
+## OpenAI
+
+### Project API Key (Current)
+```
+sk-proj-[A-Za-z0-9_\-]{48,}
+```
+* Current standard format (2024+). Project-scoped keys replace legacy user keys. Length is variable (typically 100–200 characters total).
+* [OpenAI: API Keys](https://platform.openai.com/api-keys)
+* [OpenAI Community: Project API Key Length](https://community.openai.com/t/project-api-key-length-has-it-changed-from-48-to-156/920777)
+
+### Legacy User API Key (Classic, pre-2024) ⚠️
 ```
 sk-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
 ```
+> ⚠️ Legacy format. The `T3BlbkFJ` embedded string (Base64 for `OpenAI`) was a static artifact of the original key generation scheme. OpenAI stopped issuing these; existing keys remain valid until revoked.
 
-## User Project Key
-```
-sk-proj-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
-```
+* [OpenAI Community: Valid characters for API key](https://community.openai.com/t/what-are-the-valid-characters-for-the-apikey/288643)
 
-## Service ID
+### Service Account Key
 ```
-^[A-Za-z0-9]+(-*[A-Za-z0-9]+)*$
+sk-svcacct-[A-Za-z0-9_\-]{48,}
 ```
+* Service accounts created via the OpenAI dashboard for automated/programmatic access.
 
-## Service Key
-```
-sk-{SERVICE ID}-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
-```
 
-## Vercel 🆕
+
+## Vercel
 
 ### Personal Access Token (New Format, 2024+)
 ```
