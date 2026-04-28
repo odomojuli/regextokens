@@ -203,16 +203,47 @@ T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}
 ```
 * https://api.slack.com/messaging/webhooks
 
+## Amazon Web Services (AWS)
 
-# Amazon Web Services
-## Access ID Key
+### Long-Term IAM Access Key ID
 ```
 AKIA[0-9A-Z]{16}
 ```
-## Secret Key
+* AWS IAM long-term credentials. Characters are drawn from `[A-Z2-7]` (Base32); the `AKIA` prefix uniquely identifies long-term IAM user keys.
+* [AWS Access Key ID Formats — Aidan Steele's Blog](https://awsteele.com/blog/2020/09/26/aws-access-key-format.html)
+* [Summit Route: AWS Security Credential Formats](https://summitroute.com/blog/2018/06/20/aws_security_credential_formats/)
+
+### Temporary STS Access Key ID
 ```
-[0-9a-zA-Z/+]{40}
+ASIA[0-9A-Z]{16}
 ```
+* Temporary credentials issued via `AWS STS AssumeRole`, `GetSessionToken`, and federated identity operations. Accompanied by a session token; rotate within 15 min – 36 hrs.
+* [AWS STS GetAccessKeyInfo](https://docs.aws.amazon.com/STS/latest/APIReference/API_GetAccessKeyInfo.html)
+
+### Additional IAM Identifier Prefixes
+```
+(AKIA|ASIA|AROA|AIDA|ANPA|ANVA|APKA)[0-9A-Z]{16}
+```
+| Prefix | Type |
+|--------|------|
+| `AKIA` | Long-term IAM user key |
+| `ASIA` | STS temporary key |
+| `AROA` | IAM role ID |
+| `AIDA` | IAM user ID |
+| `ANPA` | Managed policy ID |
+| `ANVA` | EC2 instance profile |
+| `APKA` | Public key |
+
+* [AWS Access Key Formats — Summit Route](https://summitroute.com/blog/2018/06/20/aws_security_credential_formats/)
+
+### Secret Access Key
+```
+(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])
+```
+> ⚡ High FP Risk — always pair with adjacent `AKIA`/`ASIA` key detection or context keywords (`aws_secret_access_key`, `AWS_SECRET`). Standalone use will produce many false positives.
+
+* [AWS Best Practices for Managing Access Keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#lock-away-credentials)
+
 
 # Google Cloud Platform
 ## OAuth 2.0
