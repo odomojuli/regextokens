@@ -1,0 +1,167 @@
+% references.bib
+% Bibliography for regextokens: secret / credential detection literature.
+% All entries verified against primary sources (NDSS, USENIX, MSR, ESEM, ICSE,
+% ICISSP, EMSE, IETF, arXiv). Generated 2026-06-01.
+
+% =====================================================================
+% Secret leakage: measurement & developer practice
+% =====================================================================
+
+@inproceedings{meli2019howbad,
+  title     = {How Bad Can It Git? Characterizing Secret Leakage in Public GitHub Repositories},
+  author    = {Meli, Michael and McNiece, Matthew R. and Reaves, Bradley},
+  booktitle = {Proceedings of the 2019 Network and Distributed System Security Symposium (NDSS)},
+  year      = {2019},
+  doi       = {10.14722/ndss.2019.23418},
+  note      = {Foundational empirical study; source of many copied token regexes}
+}
+
+@inproceedings{krause2023pushed,
+  title     = {Pushed by Accident: A Mixed-Methods Study on Strategies of Handling Secret Information in Source Code Repositories},
+  author    = {Krause, Alexander and Klemmer, Jan H. and Huaman, Nicolas and Wermke, Dominik and Acar, Yasemin and Fahl, Sascha},
+  booktitle = {32nd USENIX Security Symposium (USENIX Security 23)},
+  year      = {2023},
+  publisher = {USENIX Association}
+}
+
+@article{rahman2022whysecret,
+  title   = {Why secret detection tools are not enough: It's not just about false positives --- An industrial case study},
+  author  = {Rahman, Md Rayhanur and Imtiaz, Nasif and Storey, Margaret-Anne and Williams, Laurie},
+  journal = {Empirical Software Engineering},
+  volume  = {27},
+  number  = {3},
+  year    = {2022},
+  doi     = {10.1007/s10664-021-10109-y}
+}
+
+% =====================================================================
+% Detection tools: evaluation & datasets
+% =====================================================================
+
+@inproceedings{basak2023comparative,
+  title        = {A Comparative Study of Software Secrets Reporting by Secret Detection Tools},
+  author       = {Basak, Setu Kumar and Cox, Jamison and Reaves, Bradley and Williams, Laurie},
+  booktitle    = {ACM/IEEE International Symposium on Empirical Software Engineering and Measurement (ESEM)},
+  year         = {2023},
+  doi          = {10.1109/ESEM56168.2023.10304853},
+  eprint       = {2307.00714},
+  archivePrefix = {arXiv},
+  note         = {Precision/recall benchmark of 9 tools cited in sniffer-audit.md}
+}
+
+@inproceedings{basak2023secretbench,
+  title        = {SecretBench: A Dataset of Software Secrets},
+  author       = {Basak, Setu Kumar and Neil, Lorenzo and Reaves, Bradley and Williams, Laurie},
+  booktitle    = {IEEE/ACM 20th International Conference on Mining Software Repositories (MSR)},
+  year         = {2023},
+  doi          = {10.1109/MSR59073.2023.00053},
+  eprint       = {2303.06729},
+  archivePrefix = {arXiv},
+  note         = {Labeled benchmark of 97,479 candidate secrets (15,084 true)}
+}
+
+% =====================================================================
+% Detection techniques (regex, entropy, ML, data-flow)
+% =====================================================================
+
+@inproceedings{sinha2015detecting,
+  title     = {Detecting and Mitigating Secret-Key Leaks in Source Code Repositories},
+  author    = {Sinha, Vibha Singhal and Saha, Diptikalyan and Dhoolia, Pankaj and Padhye, Rohan and Mani, Senthil},
+  booktitle = {IEEE/ACM 12th Working Conference on Mining Software Repositories (MSR)},
+  pages     = {396--400},
+  year      = {2015}
+}
+
+@inproceedings{saha2020secrets,
+  title     = {Secrets in Source Code: Reducing False Positives using Machine Learning},
+  author    = {Saha, Aakanksha and Denning, Tamara and Srikumar, Vivek and Kasera, Sneha Kumar},
+  booktitle = {International Conference on COMmunication Systems \& NETworkS (COMSNETS)},
+  year      = {2020},
+  doi       = {10.1109/COMSNETS48256.2020.9027350}
+}
+
+@inproceedings{lounici2021optimizing,
+  title     = {Optimizing Leak Detection in Open-source Platforms with Machine Learning Techniques},
+  author    = {Lounici, Sofiane and Rosa, Marco and Negri, Carlo Maria and Trabelsi, Slim and {\"O}nen, Melek},
+  booktitle = {7th International Conference on Information Systems Security and Privacy (ICISSP)},
+  pages     = {145--159},
+  year      = {2021},
+  doi       = {10.5220/0010238101450159},
+  note      = {Basis of SAP credential-digger}
+}
+
+@misc{ding2020sniffing,
+  title         = {Sniffing for Codebase Secret Leaks with Known Production Secrets in Industry},
+  author        = {Ding, Zhen Yu and Khakshoor, Benjamin and Paglierani, Justin and Rajpal, Mantej},
+  year          = {2020},
+  eprint        = {2008.05997},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR}
+}
+
+@inproceedings{basak2025assetharvester,
+  title        = {AssetHarvester: A Static Analysis Tool for Detecting Secret-Asset Pairs in Software Artifacts},
+  author       = {Basak, Setu Kumar and English, K. Virgil and Ogura, Ken and Kambara, Vitesh and Reaves, Bradley and Williams, Laurie},
+  booktitle    = {IEEE/ACM 47th International Conference on Software Engineering (ICSE)},
+  year         = {2025},
+  doi          = {10.1109/ICSE55347.2025.00067},
+  eprint       = {2403.19072},
+  archivePrefix = {arXiv}
+}
+
+% =====================================================================
+% LLM-based detection (recent)
+% =====================================================================
+
+@misc{ahmed2024secretleak,
+  title         = {Secret Leak Detection in Software Issue Reports using LLMs: A Comprehensive Evaluation},
+  author        = {Ahmed, Sadif and Rahman, Md Nafiu and Wahab, Zahin and Uddin, Gias and Shahriyar, Rifat},
+  year          = {2024},
+  eprint        = {2410.23657},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+  note          = {To appear, MSR 2026}
+}
+
+@misc{rahman2025secretbreach,
+  title         = {Secret Breach Detection in Source Code with Large Language Models},
+  author        = {Rahman, Md Nafiu and Ahmed, Sadif and Wahab, Zahin and Sohan, S M and Shahriyar, Rifat},
+  year          = {2025},
+  eprint        = {2504.18784},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE}
+}
+
+% =====================================================================
+% Standards & specifications used by this repo
+% =====================================================================
+
+@techreport{rfc7519,
+  title       = {JSON Web Token (JWT)},
+  author      = {Jones, Michael B. and Bradley, John and Sakimura, Nat},
+  institution = {Internet Engineering Task Force (IETF)},
+  type        = {RFC},
+  number      = {7519},
+  year        = {2015},
+  doi         = {10.17487/RFC7519}
+}
+
+@techreport{rfc4648,
+  title       = {The Base16, Base32, and Base64 Data Encodings},
+  author      = {Josefsson, Simon},
+  institution = {Internet Engineering Task Force (IETF)},
+  type        = {RFC},
+  number      = {4648},
+  year        = {2006},
+  doi         = {10.17487/RFC4648}
+}
+
+@techreport{rfc7468,
+  title       = {Textual Encodings of PKIX, PKCS, and CMS Structures},
+  author      = {Josefsson, Simon and Leonard, Sean},
+  institution = {Internet Engineering Task Force (IETF)},
+  type        = {RFC},
+  number      = {7468},
+  year        = {2015},
+  doi         = {10.17487/RFC7468}
+}
