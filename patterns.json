@@ -1,0 +1,880 @@
+{
+  "name": "regextokens",
+  "description": "Modernized regex patterns for OAuth / API token scanning.",
+  "generated": "2026-06-01",
+  "flavor": "RE2-compatible (Go) and Python re. No lookbehind/backreferences.",
+  "count": 71,
+  "strategy_legend": {
+    "prefix": "Distinctive fixed prefix; regex reliable on its own.",
+    "structure": "Fixed structural shape (UUID, dotted/delimited segments).",
+    "keyword": "Low entropy / no prefix; gate on a nearby keyword.",
+    "identifier": "Public handle, not a secret.",
+    "encoding": "Format validator, not a secret."
+  },
+  "fields": {
+    "id": "stable slug",
+    "provider": "issuing service",
+    "category": "grouping",
+    "name": "token type",
+    "regex": "the pattern (designed for re.search / scanning)",
+    "strategy": "see strategy_legend",
+    "refs": "source URLs",
+    "notes": "caveats"
+  },
+  "samples_note": "Positive/negative test tokens are defined in build_patterns.py and exercised by tests/test_patterns.py. They are intentionally omitted here: a sample that matches a pattern also matches issuer secret scanners, which would block commits.",
+  "patterns": [
+    {
+      "id": "base64-string",
+      "provider": "Generic",
+      "category": "Generic / Crypto",
+      "name": "Base64 string",
+      "regex": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+      "strategy": "encoding",
+      "refs": [
+        "https://datatracker.ietf.org/doc/html/rfc4648#section-4"
+      ],
+      "notes": "Format validator, not a secret. Standard Base64 alphabet with padding. Anchored."
+    },
+    {
+      "id": "jwt",
+      "provider": "Generic",
+      "category": "Generic / Crypto",
+      "name": "JSON Web Token (JWT)",
+      "regex": "\\bey[A-Za-z0-9_-]{10,}\\.ey[A-Za-z0-9/_-]{10,}\\.[A-Za-z0-9/_-]{10,}",
+      "strategy": "structure",
+      "refs": [
+        "https://datatracker.ietf.org/doc/html/rfc7519"
+      ],
+      "notes": "Three base64url segments. Header begins ey (i.e. {\"). Decode to inspect; signature alone is not the secret."
+    },
+    {
+      "id": "private-key-block",
+      "provider": "Generic",
+      "category": "Generic / Crypto",
+      "name": "PEM private key block",
+      "regex": "-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY-----",
+      "strategy": "prefix",
+      "refs": [
+        "https://datatracker.ietf.org/doc/html/rfc7468"
+      ],
+      "notes": "Highest-value single indicator. Matches the header line of any PEM-encoded private key."
+    },
+    {
+      "id": "aws-access-key-id",
+      "provider": "Amazon Web Services",
+      "category": "Cloud",
+      "name": "Access key ID",
+      "regex": "\\b(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z2-7]{16}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html",
+        "https://docs.aws.amazon.com/STS/latest/APIReference/API_GetSessionToken.html"
+      ],
+      "notes": "20 chars. AKIA = long-term IAM key. ASIA = temporary STS/session key. Body is base32 (A-Z, 2-7)."
+    },
+    {
+      "id": "aws-secret-access-key",
+      "provider": "Amazon Web Services",
+      "category": "Cloud",
+      "name": "Secret access key (keyword-gated)",
+      "regex": "(?i)aws[\\w.\\-= :'\\\"]{0,25}([A-Za-z0-9/+]{40})",
+      "strategy": "keyword",
+      "refs": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html"
+      ],
+      "notes": "40-char base64 body has no fixed prefix and is low entropy. Gate on an 'aws' keyword or it matches almost any 40-char token."
+    },
+    {
+      "id": "google-api-key",
+      "provider": "Google",
+      "category": "Cloud",
+      "name": "API key",
+      "regex": "\\bAIza[0-9A-Za-z_-]{35}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://cloud.google.com/docs/authentication/api-keys"
+      ],
+      "notes": "39 chars total. Covers Maps, Firebase, and most GCP API keys."
+    },
+    {
+      "id": "google-oauth-client-id",
+      "provider": "Google",
+      "category": "Cloud",
+      "name": "OAuth 2.0 client ID",
+      "regex": "\\b[0-9]+-[0-9a-z]{32}\\.apps\\.googleusercontent\\.com\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developers.google.com/identity/protocols/oauth2"
+      ],
+      "notes": "Client ID is public, but pins config to a project. Ends in .apps.googleusercontent.com."
+    },
+    {
+      "id": "google-oauth-client-secret",
+      "provider": "Google",
+      "category": "Cloud",
+      "name": "OAuth 2.0 client secret",
+      "regex": "\\bGOCSPX-[0-9A-Za-z_-]{28}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developers.google.com/identity/protocols/oauth2"
+      ],
+      "notes": "Current client-secret format. Replaced the old unprefixed 24-char secret."
+    },
+    {
+      "id": "google-oauth-access-token",
+      "provider": "Google",
+      "category": "Cloud",
+      "name": "OAuth 2.0 access token",
+      "regex": "\\bya29\\.[0-9A-Za-z_-]+",
+      "strategy": "prefix",
+      "refs": [
+        "https://developers.google.com/identity/protocols/oauth2"
+      ],
+      "notes": "Short-lived. Prefix ya29. then variable-length body."
+    },
+    {
+      "id": "google-oauth-refresh-token",
+      "provider": "Google",
+      "category": "Cloud",
+      "name": "OAuth 2.0 refresh token",
+      "regex": "\\b1//[0-9A-Za-z_-]{43,128}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developers.google.com/identity/protocols/oauth2"
+      ],
+      "notes": "Begins 1// (note double slash). Replaces the older single-slash 1/ format."
+    },
+    {
+      "id": "github-pat-classic",
+      "provider": "GitHub",
+      "category": "Source / CI",
+      "name": "Personal access token (classic)",
+      "regex": "\\bghp_[0-9A-Za-z]{36}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens"
+      ],
+      "notes": "All GitHub v2 tokens carry a checksum in the body; shape match is necessary, not sufficient."
+    },
+    {
+      "id": "github-pat-fine-grained",
+      "provider": "GitHub",
+      "category": "Source / CI",
+      "name": "Personal access token (fine-grained)",
+      "regex": "\\bgithub_pat_[0-9A-Za-z_]{82}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token"
+      ],
+      "notes": "82 chars after the prefix (22 + '_' + 59)."
+    },
+    {
+      "id": "github-oauth-token",
+      "provider": "GitHub",
+      "category": "Source / CI",
+      "name": "OAuth access token",
+      "regex": "\\bgho_[0-9A-Za-z]{36}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "github-user-to-server",
+      "provider": "GitHub",
+      "category": "Source / CI",
+      "name": "User-to-server token",
+      "regex": "\\bghu_[0-9A-Za-z]{36}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "github-server-to-server",
+      "provider": "GitHub",
+      "category": "Source / CI",
+      "name": "Server-to-server token",
+      "regex": "\\bghs_[0-9A-Za-z]{36}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/about-authentication-with-a-github-app"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "github-refresh-token",
+      "provider": "GitHub",
+      "category": "Source / CI",
+      "name": "Refresh token",
+      "regex": "\\bghr_[0-9A-Za-z]{36}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "gitlab-pat",
+      "provider": "GitLab",
+      "category": "Source / CI",
+      "name": "Personal access token",
+      "regex": "\\bglpat-[0-9A-Za-z_-]{20}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.gitlab.com/ee/security/token_overview.html"
+      ],
+      "notes": "GitLab moved all tokens to typed gl* prefixes."
+    },
+    {
+      "id": "gitlab-oauth-app-secret",
+      "provider": "GitLab",
+      "category": "Source / CI",
+      "name": "OAuth application secret",
+      "regex": "\\bgloas-[0-9A-Za-z_-]{64}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.gitlab.com/ee/security/token_overview.html"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "gitlab-pipeline-trigger-token",
+      "provider": "GitLab",
+      "category": "Source / CI",
+      "name": "Pipeline trigger token",
+      "regex": "\\bglptt-[0-9a-f]{40}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.gitlab.com/ee/security/token_overview.html"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "gitlab-runner-token",
+      "provider": "GitLab",
+      "category": "Source / CI",
+      "name": "Runner authentication token",
+      "regex": "\\bglrt-[0-9A-Za-z_-]{20}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.gitlab.com/ee/security/token_overview.html"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "openai-api-key",
+      "provider": "OpenAI",
+      "category": "AI",
+      "name": "API key",
+      "regex": "\\bsk-(?:proj-|svcacct-|admin-)?[0-9A-Za-z_-]{20,74}T3BlbkFJ[0-9A-Za-z_-]{20,74}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://platform.openai.com/docs/api-reference/authentication"
+      ],
+      "notes": "Modern keys embed the literal T3BlbkFJ (base64 'OpenAI') mid-token. Optional sub-prefixes proj-/svcacct-/admin-."
+    },
+    {
+      "id": "openai-api-key-legacy",
+      "provider": "OpenAI",
+      "category": "AI",
+      "name": "API key (legacy, no longer issued)",
+      "regex": "\\bsk-[0-9A-Za-z]{48}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://platform.openai.com/docs/api-reference/authentication"
+      ],
+      "notes": "Pre-2024 format. High false-positive rate (any sk- + 48 alnum). Prefer the T3BlbkFJ-anchored rule above."
+    },
+    {
+      "id": "anthropic-api-key",
+      "provider": "Anthropic",
+      "category": "AI",
+      "name": "API key",
+      "regex": "\\bsk-ant-api03-[0-9A-Za-z_-]{93}AA\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.anthropic.com/en/api/getting-started"
+      ],
+      "notes": "Body is fixed length and ends in AA."
+    },
+    {
+      "id": "anthropic-admin-key",
+      "provider": "Anthropic",
+      "category": "AI",
+      "name": "Admin API key",
+      "regex": "\\bsk-ant-admin01-[0-9A-Za-z_-]{93}AA\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.anthropic.com/en/api/administration"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "huggingface-token",
+      "provider": "Hugging Face",
+      "category": "AI",
+      "name": "User access token",
+      "regex": "\\bhf_[0-9A-Za-z]{34}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://huggingface.co/docs/hub/security-tokens"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "npm-token",
+      "provider": "npm",
+      "category": "Source / CI",
+      "name": "Access token",
+      "regex": "\\bnpm_[0-9A-Za-z]{36}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.npmjs.com/about-access-tokens"
+      ],
+      "notes": "Prefix introduced 2021; final chars encode a CRC32 checksum."
+    },
+    {
+      "id": "pypi-token",
+      "provider": "PyPI",
+      "category": "Source / CI",
+      "name": "Upload token",
+      "regex": "\\bpypi-AgEIcHlwaS5vcmc[0-9A-Za-z_-]{50,1000}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://pypi.org/help/#apitoken"
+      ],
+      "notes": "Macaroon. The static segment AgEIcHlwaS5vcmc is base64 'pypi.org'."
+    },
+    {
+      "id": "stripe-secret-key",
+      "provider": "Stripe",
+      "category": "Payments",
+      "name": "Secret / restricted key",
+      "regex": "\\b(?:sk|rk)_(?:live|test)_[0-9A-Za-z]{24,99}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.stripe.com/keys"
+      ],
+      "notes": "sk_ = full secret, rk_ = restricted (scoped). live/test mode. Length now variable (legacy 24, newer keys far longer)."
+    },
+    {
+      "id": "stripe-publishable-key",
+      "provider": "Stripe",
+      "category": "Payments",
+      "name": "Publishable key",
+      "regex": "\\bpk_(?:live|test)_[0-9A-Za-z]{24,99}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.stripe.com/keys"
+      ],
+      "notes": "Client-side, not secret, but useful for environment fingerprinting."
+    },
+    {
+      "id": "square-access-token",
+      "provider": "Square",
+      "category": "Payments",
+      "name": "Production access token",
+      "regex": "\\bEAAA[0-9A-Za-z_-]{60}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developer.squareup.com/docs/build-basics/access-tokens"
+      ],
+      "notes": "Current OAuth/personal access token format."
+    },
+    {
+      "id": "square-access-token-legacy",
+      "provider": "Square",
+      "category": "Payments",
+      "name": "Access token (legacy)",
+      "regex": "\\bsq0atp-[0-9A-Za-z_-]{22}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developer.squareup.com/docs/build-basics/access-tokens"
+      ],
+      "notes": "Prefix is sq-zero-atp. The capital-O 'sqOatp' in older lists is wrong."
+    },
+    {
+      "id": "square-oauth-secret-legacy",
+      "provider": "Square",
+      "category": "Payments",
+      "name": "OAuth secret (legacy)",
+      "regex": "\\bsq0csp-[0-9A-Za-z_-]{43}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developer.squareup.com/docs/build-basics/access-tokens"
+      ],
+      "notes": "Prefix is sq-zero-csp."
+    },
+    {
+      "id": "paypal-braintree-access-token",
+      "provider": "PayPal / Braintree",
+      "category": "Payments",
+      "name": "Access token",
+      "regex": "\\baccess_token\\$production\\$[0-9a-z]{16}\\$[0-9a-f]{32}\\b",
+      "strategy": "structure",
+      "refs": [
+        "https://developer.paypal.com/braintree/docs/guides/authorization/gateway-credentials"
+      ],
+      "notes": "Dollar-delimited: access_token$production$<16>$<32>. The mangled entry in older lists never compiled."
+    },
+    {
+      "id": "picatic-api-key",
+      "provider": "Picatic",
+      "category": "Payments",
+      "name": "API key (DEPRECATED service)",
+      "regex": "\\bsk_live_[0-9a-z]{32}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf"
+      ],
+      "notes": "Picatic shut down in 2018. Kept for historical scanning only. Note the prefix collides with Stripe-style sk_live_."
+    },
+    {
+      "id": "shopify-access-token",
+      "provider": "Shopify",
+      "category": "Payments",
+      "name": "Admin API access token",
+      "regex": "\\bshpat_[0-9a-fA-F]{32}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens"
+      ],
+      "notes": "shpat_ = admin API. Related prefixes: shpss_ (shared secret), shppa_ (private app), shpca_ (custom app)."
+    },
+    {
+      "id": "shopify-shared-secret",
+      "provider": "Shopify",
+      "category": "Payments",
+      "name": "Shared secret",
+      "regex": "\\bshpss_[0-9a-fA-F]{32}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "shopify-private-app-token",
+      "provider": "Shopify",
+      "category": "Payments",
+      "name": "Private app access token",
+      "regex": "\\bshppa_[0-9a-fA-F]{32}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "shopify-custom-app-token",
+      "provider": "Shopify",
+      "category": "Payments",
+      "name": "Custom app access token",
+      "regex": "\\bshpca_[0-9a-fA-F]{32}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "slack-bot-token",
+      "provider": "Slack",
+      "category": "Comms",
+      "name": "Bot token (xoxb)",
+      "regex": "\\bxoxb-[0-9]{10,13}-[0-9]{10,13}-[0-9A-Za-z]{24,34}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://api.slack.com/authentication/token-types"
+      ],
+      "notes": "Segment lengths are now variable; fixed {11}-{11}-{24} from older lists misses current tokens."
+    },
+    {
+      "id": "slack-user-token",
+      "provider": "Slack",
+      "category": "Comms",
+      "name": "User token (xoxp)",
+      "regex": "\\bxoxp-(?:[0-9]{10,13}-){3}[0-9A-Za-z]{28,34}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://api.slack.com/authentication/token-types"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "slack-config-token",
+      "provider": "Slack",
+      "category": "Comms",
+      "name": "App configuration token (xoxe.xoxp)",
+      "regex": "\\bxoxe\\.xox[bp]-\\d-[0-9A-Za-z]{146,166}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://api.slack.com/authentication/rotation"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "slack-refresh-token",
+      "provider": "Slack",
+      "category": "Comms",
+      "name": "Refresh token (xoxe)",
+      "regex": "\\bxoxe-\\d-[0-9A-Za-z]{146,166}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://api.slack.com/authentication/rotation"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "slack-webhook-url",
+      "provider": "Slack",
+      "category": "Comms",
+      "name": "Incoming webhook URL",
+      "regex": "https://hooks\\.slack\\.com/services/T[0-9A-Za-z_]{8,12}/B[0-9A-Za-z_]{8,12}/[0-9A-Za-z]{24}",
+      "strategy": "prefix",
+      "refs": [
+        "https://api.slack.com/messaging/webhooks"
+      ],
+      "notes": "Full URL is the secret. Old bare T../B../.. shape produced false positives."
+    },
+    {
+      "id": "twilio-account-sid",
+      "provider": "Twilio",
+      "category": "Comms",
+      "name": "Account SID",
+      "regex": "\\bAC[0-9a-fA-F]{32}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://www.twilio.com/docs/iam/api-keys"
+      ],
+      "notes": "Prefix AC + 32 hex. Older '55...' lists were incorrect."
+    },
+    {
+      "id": "twilio-api-key-sid",
+      "provider": "Twilio",
+      "category": "Comms",
+      "name": "API key SID",
+      "regex": "\\bSK[0-9a-fA-F]{32}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://www.twilio.com/docs/iam/api-keys"
+      ],
+      "notes": "Pairs with a 32-hex secret (no prefix; gate on a 'twilio' keyword)."
+    },
+    {
+      "id": "sendgrid-api-key",
+      "provider": "SendGrid",
+      "category": "Comms",
+      "name": "API key",
+      "regex": "\\bSG\\.[0-9A-Za-z_-]{22}\\.[0-9A-Za-z_-]{43}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://www.twilio.com/docs/sendgrid/ui/account-and-settings/api-keys"
+      ],
+      "notes": "SG.<22>.<43>"
+    },
+    {
+      "id": "mailgun-private-key",
+      "provider": "Mailgun",
+      "category": "Comms",
+      "name": "Private API key",
+      "regex": "\\bkey-[0-9a-f]{32}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://documentation.mailgun.com/docs/mailgun/api-reference/authentication/"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "mailchimp-api-key",
+      "provider": "Mailchimp",
+      "category": "Comms",
+      "name": "API key",
+      "regex": "\\b[0-9a-f]{32}-us[0-9]{1,2}\\b",
+      "strategy": "structure",
+      "refs": [
+        "https://mailchimp.com/developer/marketing/guides/quick-start/"
+      ],
+      "notes": "Trailing -us<dc> is the datacenter. The 32-hex prefix alone is not distinctive."
+    },
+    {
+      "id": "discord-bot-token",
+      "provider": "Discord",
+      "category": "Comms",
+      "name": "Bot token",
+      "regex": "\\b[MNO][0-9A-Za-z_-]{23,25}\\.[0-9A-Za-z_-]{6}\\.[0-9A-Za-z_-]{27,38}\\b",
+      "strategy": "structure",
+      "refs": [
+        "https://discord.com/developers/docs/topics/oauth2"
+      ],
+      "notes": "Three dot-separated base64url segments; first encodes the bot user ID. Approximate; verify by decoding segment 1."
+    },
+    {
+      "id": "twitter-bearer-token",
+      "provider": "Twitter / X",
+      "category": "Social",
+      "name": "App-only bearer token",
+      "regex": "\\bA{22}[0-9A-Za-z%]{80,}",
+      "strategy": "prefix",
+      "refs": [
+        "https://developer.twitter.com/en/docs/authentication/oauth-2-0/bearer-tokens"
+      ],
+      "notes": "Begins with a long run of 'A' (base64 padding), then URL-encoded body."
+    },
+    {
+      "id": "twitter-access-token-legacy",
+      "provider": "Twitter / X",
+      "category": "Social",
+      "name": "OAuth 1.0a access token",
+      "regex": "\\b[1-9][0-9]+-[0-9A-Za-z]{40}\\b",
+      "strategy": "structure",
+      "refs": [
+        "https://developer.twitter.com/en/docs/authentication/oauth-1-0a"
+      ],
+      "notes": "<numeric user id>-<40 alnum>. Structural; pair with a 'twitter' keyword to cut noise."
+    },
+    {
+      "id": "twitter-username",
+      "provider": "Twitter / X",
+      "category": "Social",
+      "name": "Username / handle",
+      "regex": "(?:^|[^@\\w])@(\\w{1,15})\\b",
+      "strategy": "identifier",
+      "refs": [
+        "https://github.com/twitter/twitter-text/blob/master/rb/lib/twitter-text/regex.rb"
+      ],
+      "notes": "Public handle, not a secret. 1-15 word chars, not preceded by @ or word char."
+    },
+    {
+      "id": "facebook-access-token",
+      "provider": "Facebook",
+      "category": "Social",
+      "name": "Access token",
+      "regex": "\\bEAA[0-9A-Za-z]{90,}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developers.facebook.com/docs/facebook-login/guides/access-tokens"
+      ],
+      "notes": "Graph API tokens begin EAA. The old fixed 'EAACEdEose0cBA' app prefix is obsolete."
+    },
+    {
+      "id": "instagram-access-token",
+      "provider": "Instagram",
+      "category": "Social",
+      "name": "Access token",
+      "regex": "\\bIGQ[0-9A-Za-z_-]{100,}",
+      "strategy": "prefix",
+      "refs": [
+        "https://developers.facebook.com/docs/instagram-platform"
+      ],
+      "notes": "Instagram Basic Display was deprecated Dec 2024; current long-lived tokens (IGQ / Facebook EAA) are issued via the Instagram API with Facebook Login."
+    },
+    {
+      "id": "instagram-username",
+      "provider": "Instagram",
+      "category": "Social",
+      "name": "Username",
+      "regex": "(?:^|[^\\w])@([A-Za-z0-9_.]{1,30})\\b",
+      "strategy": "identifier",
+      "refs": [
+        "https://blog.jstassen.com/2016/03/code-regex-for-instagram-username-and-hashtags/"
+      ],
+      "notes": "Public handle. RE2-safe rewrite of the old lookahead-based pattern."
+    },
+    {
+      "id": "foursquare-service-key",
+      "provider": "Foursquare",
+      "category": "Social",
+      "name": "Service API key",
+      "regex": "\\bfsq3[0-9A-Za-z/+_-]{40,}={0,2}",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.foursquare.com/developer/reference/personalization-apis-authentication"
+      ],
+      "notes": "Current Places API key prefix fsq3. The old '[0-9a-zA-Z_]{5,31}' client key was too generic to detect; the original list also mis-typed it as a character class."
+    },
+    {
+      "id": "linear-api-key",
+      "provider": "Linear",
+      "category": "Productivity",
+      "name": "API key",
+      "regex": "\\blin_api_[0-9A-Za-z]{40}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developers.linear.app/docs/graphql/working-with-the-graphql-api"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "databricks-token",
+      "provider": "Databricks",
+      "category": "Productivity",
+      "name": "Personal access token",
+      "regex": "\\bdapi[0-9a-f]{32}(?:-\\d)?\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.databricks.com/en/dev-tools/auth/pat.html"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "doppler-token",
+      "provider": "Doppler",
+      "category": "Productivity",
+      "name": "Personal token",
+      "regex": "\\bdp\\.pt\\.[0-9A-Za-z]{43}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.doppler.com/docs/service-tokens"
+      ],
+      "notes": "Other Doppler scopes use dp.st. (service), dp.sa. (service account)."
+    },
+    {
+      "id": "digitalocean-pat",
+      "provider": "DigitalOcean",
+      "category": "Cloud",
+      "name": "Personal access token",
+      "regex": "\\bdop_v1_[0-9a-f]{64}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://docs.digitalocean.com/reference/api/create-personal-access-token/"
+      ],
+      "notes": "OAuth token dor_v1_ / refresh dor_v1_ share the same shape."
+    },
+    {
+      "id": "heroku-api-key",
+      "provider": "Heroku",
+      "category": "Cloud",
+      "name": "API key (keyword-gated UUID)",
+      "regex": "(?i)heroku[\\w.\\-= :'\\\"]{0,25}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})",
+      "strategy": "keyword",
+      "refs": [
+        "https://devcenter.heroku.com/articles/platform-api-quickstart"
+      ],
+      "notes": "Legacy keys are bare UUIDs - indistinguishable from any UUID without a 'heroku' keyword. Newer keys use the HRKU- prefix."
+    },
+    {
+      "id": "heroku-api-key-v2",
+      "provider": "Heroku",
+      "category": "Cloud",
+      "name": "API key (v2)",
+      "regex": "\\bHRKU-[0-9A-Za-z_-]{58,}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://devcenter.heroku.com/articles/platform-api-quickstart"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "amazon-mws-auth-token",
+      "provider": "Amazon MWS",
+      "category": "Cloud",
+      "name": "Auth token (DEPRECATED API)",
+      "regex": "\\bamzn\\.mws\\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\b",
+      "strategy": "structure",
+      "refs": [
+        "https://developer-docs.amazon.com/sp-api/docs/migrating-from-amazon-mws"
+      ],
+      "notes": "amzn.mws.<UUID>. MWS retired in favor of SP-API (Login with Amazon tokens, prefixes Atza|/Atzr|). Original list entry was malformed."
+    },
+    {
+      "id": "cloudflare-api-token",
+      "provider": "Cloudflare",
+      "category": "Cloud",
+      "name": "API token (keyword-gated)",
+      "regex": "(?i)cloudflare[\\w.\\-= :'\\\"]{0,25}([A-Za-z0-9_-]{40})",
+      "strategy": "keyword",
+      "refs": [
+        "https://developers.cloudflare.com/fundamentals/api/get-started/create-token/"
+      ],
+      "notes": "40-char token, no fixed prefix; gate on a 'cloudflare' keyword or it matches any 40-char string."
+    },
+    {
+      "id": "cloudflare-global-api-key",
+      "provider": "Cloudflare",
+      "category": "Cloud",
+      "name": "Global API key (legacy, keyword-gated)",
+      "regex": "(?i)cloudflare[\\w.\\-= :'\\\"]{0,25}([a-f0-9]{37})",
+      "strategy": "keyword",
+      "refs": [
+        "https://developers.cloudflare.com/fundamentals/api/get-started/keys/"
+      ],
+      "notes": "Legacy 37-hex global key; keyword-gated. Prefer scoped API tokens."
+    },
+    {
+      "id": "cloudflare-origin-ca-key",
+      "provider": "Cloudflare",
+      "category": "Cloud",
+      "name": "Origin CA key",
+      "regex": "\\bv1\\.0-[0-9a-f]{24}-[0-9a-f]{146}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/"
+      ],
+      "notes": "Distinctive v1.0- prefix; regex-reliable."
+    },
+    {
+      "id": "vercel-access-token",
+      "provider": "Vercel",
+      "category": "Cloud",
+      "name": "Access token (2024+ format)",
+      "regex": "\\bvcp_[A-Za-z0-9]{24}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://vercel.com/changelog/new-token-formats-and-secret-scanning"
+      ],
+      "notes": "Prefixed format introduced 2024. Related: vck_ (AI Gateway), cl_ (OAuth client id)."
+    },
+    {
+      "id": "datadog-api-key",
+      "provider": "Datadog",
+      "category": "Productivity",
+      "name": "API key (keyword-gated)",
+      "regex": "(?i)datadog[\\w.\\-= :'\\\"]{0,25}([a-f0-9]{32})",
+      "strategy": "keyword",
+      "refs": [
+        "https://docs.datadoghq.com/account_management/api-app-keys/"
+      ],
+      "notes": "32-hex key, no prefix; gate on a 'datadog' keyword. Often paired with a 40-hex application key."
+    },
+    {
+      "id": "datadog-application-key",
+      "provider": "Datadog",
+      "category": "Productivity",
+      "name": "Application key (keyword-gated)",
+      "regex": "(?i)datadog[\\w.\\-= :'\\\"]{0,25}([a-f0-9]{40})",
+      "strategy": "keyword",
+      "refs": [
+        "https://docs.datadoghq.com/account_management/api-app-keys/"
+      ],
+      "notes": "40-hex application key, no prefix; keyword-gated."
+    },
+    {
+      "id": "wakatime-api-key",
+      "provider": "WakaTime",
+      "category": "Productivity",
+      "name": "API key",
+      "regex": "\\bwaka_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://wakatime.com/developers"
+      ],
+      "notes": "waka_ + UUID."
+    },
+    {
+      "id": "braintree-tokenization-key",
+      "provider": "PayPal / Braintree",
+      "category": "Payments",
+      "name": "Tokenization key (publishable)",
+      "regex": "\\b(?:production|sandbox)_[0-9a-z]{8}_[0-9a-z]{16,}\\b",
+      "strategy": "prefix",
+      "refs": [
+        "https://developer.paypal.com/braintree/docs/guides/authorization/tokenization-key"
+      ],
+      "notes": "Environment-prefixed and publishable (client-side, not a secret) - like Stripe pk_."
+    }
+  ]
+}

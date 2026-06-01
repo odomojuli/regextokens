@@ -1,457 +1,819 @@
-# Base64
-## Format
+# regextokens
+
+Regex reference for scanning OAuth / API tokens and secrets. Each entry: the pattern, a source, and caveats. Source of truth is `patterns.json`; this file is generated from it.
+
+`71` patterns / `35` providers / generated `2026-06-01`
+
+## Use
+
 ```
-^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$
+pip install pytest
+pytest                 # validate every pattern against its samples
+python build_patterns.py   # regenerate patterns.json + readme.md
 ```
-* [How to check whether a string is Base64 encoded or not](https://stackoverflow.com/a/8571649)
 
-## Anthropic (Claude)
+Consume the catalog:
 
-### API Key
+```python
+import json, re
+pats = json.load(open("patterns.json"))["patterns"]
+rx = {p["id"]: re.compile(p["regex"]) for p in pats}
+rx["github-pat-classic"].search(text)
 ```
-sk-ant-api03-[a-zA-Z0-9_\-]{93,}
+
+## Files
+
+- `patterns.json` — source of truth (the catalog).
+- `build_patterns.py` — generator + validator; rebuilds readme.md and patterns.json.
+- `tests/test_patterns.py` — pytest suite: compiles, matches, and RE2-checks every pattern.
+- `sniffer-audit.md` — audit of other secret scanners (verification, staleness).
+- `references.bib` / `references.md` — bibliography of the secret-detection literature.
+
+## Conventions
+
+- Flavor: RE2-compatible (gitleaks/Go) and Python `re`. No lookbehind or backreferences.
+- Patterns are written for `re.search` (scanning embedded text). Wrap with `^`/`$` to use as validators.
+- `\b` word boundaries bracket most tokens. Drop them if scanning inside base64 blobs.
+- Strategy tag per entry: `prefix` = reliable alone; `structure` = fixed shape; `keyword` = gate on a nearby keyword; `identifier` = public, not secret; `encoding` = format check, not secret.
+- A shape match is necessary, not sufficient. Many issuers embed checksums; verify before acting.[^verify]
+- Example tokens in `patterns.json` are synthetic filler, not live credentials.
+
+## References
+
+- `sniffer-audit.md` — how major scanners build and verify patterns, with benchmark data.
+- `references.bib` / `references.md` — bibliography of the secret-detection literature.
+- Pattern lineage traces to Meli et al., *How Bad Can It Git?* (NDSS 2019).[^ndss]
+
+## Index
+
+- Generic / Crypto: Generic
+- Cloud: Amazon MWS, Amazon Web Services, Cloudflare, DigitalOcean, Google, Heroku, Vercel
+- Source / CI: GitHub, GitLab, PyPI, npm
+- AI: Anthropic, Hugging Face, OpenAI
+- Payments: PayPal / Braintree, Picatic, Shopify, Square, Stripe
+- Comms: Discord, Mailchimp, Mailgun, SendGrid, Slack, Twilio
+- Social: Facebook, Foursquare, Instagram, Twitter / X
+- Productivity: Databricks, Datadog, Doppler, Linear, WakaTime
+
+## Generic / Crypto
+
+### Generic
+
+**Base64 string** `[encoding]`
+
 ```
-* Anthropic API keys use the `sk-ant-api03-` prefix. Keys are displayed once at generation time and cannot be retrieved again.
-* [GitGuardian: Claude API Key Detector](https://docs.gitguardian.com/secrets-detection/secrets-detection-engine/detectors/specifics/claude_api_key)
-* [Anthropic API Overview](https://platform.claude.com/docs/en/api/overview)
-
-## Cloudflare
-
-### API Token
+^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$
 ```
-[A-Za-z0-9_\-]{40}
+
+Format validator, not a secret. Standard Base64 alphabet with padding. Anchored.
+
+src: https://datatracker.ietf.org/doc/html/rfc4648#section-4
+
+**JSON Web Token (JWT)** `[structure]`
+
 ```
-> ⚡ High FP Risk standalone — use with context keywords (`CF_API_TOKEN`, `cloudflare`) or the `Authorization: Bearer` header.
-
-* Cloudflare API Tokens are 40-character URL-safe Base64 strings, scoped to specific resources and permissions.
-* [Cloudflare: Create API Token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
-
-### Global API Key (Legacy)
+\bey[A-Za-z0-9_-]{10,}\.ey[A-Za-z0-9/_-]{10,}\.[A-Za-z0-9/_-]{10,}
 ```
-[0-9a-f]{37}
+
+Three base64url segments. Header begins ey (i.e. {"). Decode to inspect; signature alone is not the secret.
+
+src: https://datatracker.ietf.org/doc/html/rfc7519
+
+**PEM private key block** `[prefix]`
+
 ```
-> ⚠️ Deprecated in favor of scoped API Tokens. Still in wide use in legacy infrastructure.
-
-* [Cloudflare API Authentication](https://developers.cloudflare.com/api/)
-
-## Datadog
-
-### API Key
+-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY-----
 ```
-[a-f0-9]{32}
+
+Highest-value single indicator. Matches the header line of any PEM-encoded private key.
+
+src: https://datatracker.ietf.org/doc/html/rfc7468
+
+## Cloud
+
+### Amazon MWS
+
+**Auth token (DEPRECATED API)** `[structure]`
+
 ```
-> ⚡ High FP Risk — use with variable-name context: `DD_API_KEY`, `datadog_api_key`. Authenticate with header `DD-API-KEY`.
-
-* [Datadog API and Application Keys](https://docs.datadoghq.com/account_management/api-app-keys/)
-* [Datadog Authentication](https://docs.datadoghq.com/api/latest/authentication/)
-
-### Application Key
+\bamzn\.mws\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b
 ```
-[a-f0-9]{40}
+
+amzn.mws.<UUID>. MWS retired in favor of SP-API (Login with Amazon tokens, prefixes Atza|/Atzr|). Original list entry was malformed.
+
+src: https://developer-docs.amazon.com/sp-api/docs/migrating-from-amazon-mws
+
+### Amazon Web Services
+
+**Access key ID** `[prefix]`
+
 ```
-> Use with header `DD-APPLICATION-KEY`. Required for administrative endpoints.
-
-* [Datadog Key Management API](https://docs.datadoghq.com/api/latest/key-management/)
-
-## Twitter / X ⚠️
-
-> **Partially deprecated.** Twitter became X in 2023. The v1.1 API and classic OAuth 1.0a flows were restructured; many legacy token formats remain valid in the API v2 tier but new apps use OAuth 2.0 / PKCE. Legacy patterns retained for historical scanning.
-
-### OAuth 1.0a Access Token
+\b(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z2-7]{16}\b
 ```
-[1-9][0-9]+-[0-9a-zA-Z]{40}
-```
-* Format: `{user_id}-{40-char alphanumeric secret}`
 
-### OAuth 2.0 Bearer Token (App-Only)
-```
-AAAA[A-Za-z0-9%]{80,}
-```
-* App-only bearer tokens used for read-only endpoints. Typically 80–100+ URL-encoded Base64 characters beginning with `AAAA`.
-* [Twitter/X: OAuth 2.0 — Bearer Token](https://developer.twitter.com/en/docs/authentication/oauth-2-0/bearer-tokens)
+20 chars. AKIA = long-term IAM key. ASIA = temporary STS/session key. Body is base32 (A-Z, 2-7).
 
-### Username
+src: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html
+src: https://docs.aws.amazon.com/STS/latest/APIReference/API_GetSessionToken.html
+
+**Secret access key (keyword-gated)** `[keyword]`
+
+```
+(?i)aws[\w.\-= :'\"]{0,25}([A-Za-z0-9/+]{40})
+```
+
+40-char base64 body has no fixed prefix and is low entropy. Gate on an 'aws' keyword or it matches almost any 40-char token.
+
+src: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html
+
+### Cloudflare
+
+**API token (keyword-gated)** `[keyword]`
+
+```
+(?i)cloudflare[\w.\-= :'\"]{0,25}([A-Za-z0-9_-]{40})
+```
+
+40-char token, no fixed prefix; gate on a 'cloudflare' keyword or it matches any 40-char string.
+
+src: https://developers.cloudflare.com/fundamentals/api/get-started/create-token/
+
+**Global API key (legacy, keyword-gated)** `[keyword]`
+
+```
+(?i)cloudflare[\w.\-= :'\"]{0,25}([a-f0-9]{37})
+```
+
+Legacy 37-hex global key; keyword-gated. Prefer scoped API tokens.
+
+src: https://developers.cloudflare.com/fundamentals/api/get-started/keys/
+
+**Origin CA key** `[prefix]`
+
+```
+\bv1\.0-[0-9a-f]{24}-[0-9a-f]{146}\b
+```
+
+Distinctive v1.0- prefix; regex-reliable.
+
+src: https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/
+
+### DigitalOcean
+
+**Personal access token** `[prefix]`
+
+```
+\bdop_v1_[0-9a-f]{64}\b
+```
+
+OAuth token dor_v1_ / refresh dor_v1_ share the same shape.
+
+src: https://docs.digitalocean.com/reference/api/create-personal-access-token/
+
+### Google
+
+**API key** `[prefix]`
+
+```
+\bAIza[0-9A-Za-z_-]{35}\b
+```
+
+39 chars total. Covers Maps, Firebase, and most GCP API keys.
+
+src: https://cloud.google.com/docs/authentication/api-keys
+
+**OAuth 2.0 client ID** `[prefix]`
+
+```
+\b[0-9]+-[0-9a-z]{32}\.apps\.googleusercontent\.com\b
+```
+
+Client ID is public, but pins config to a project. Ends in .apps.googleusercontent.com.
+
+src: https://developers.google.com/identity/protocols/oauth2
+
+**OAuth 2.0 client secret** `[prefix]`
+
+```
+\bGOCSPX-[0-9A-Za-z_-]{28}\b
+```
+
+Current client-secret format. Replaced the old unprefixed 24-char secret.
+
+src: https://developers.google.com/identity/protocols/oauth2
+
+**OAuth 2.0 access token** `[prefix]`
+
+```
+\bya29\.[0-9A-Za-z_-]+
+```
+
+Short-lived. Prefix ya29. then variable-length body.
+
+src: https://developers.google.com/identity/protocols/oauth2
+
+**OAuth 2.0 refresh token** `[prefix]`
+
+```
+\b1//[0-9A-Za-z_-]{43,128}\b
+```
+
+Begins 1// (note double slash). Replaces the older single-slash 1/ format.
+
+src: https://developers.google.com/identity/protocols/oauth2
+
+### Heroku
+
+**API key (keyword-gated UUID)** `[keyword]`
+
+```
+(?i)heroku[\w.\-= :'\"]{0,25}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})
+```
+
+Legacy keys are bare UUIDs - indistinguishable from any UUID without a 'heroku' keyword. Newer keys use the HRKU- prefix.
+
+src: https://devcenter.heroku.com/articles/platform-api-quickstart
+
+**API key (v2)** `[prefix]`
+
+```
+\bHRKU-[0-9A-Za-z_-]{58,}\b
+```
+
+src: https://devcenter.heroku.com/articles/platform-api-quickstart
+
+### Vercel
+
+**Access token (2024+ format)** `[prefix]`
+
+```
+\bvcp_[A-Za-z0-9]{24}\b
+```
+
+Prefixed format introduced 2024. Related: vck_ (AI Gateway), cl_ (OAuth client id).
+
+src: https://vercel.com/changelog/new-token-formats-and-secret-scanning
+
+## Source / CI
+
+### GitHub
+
+**Personal access token (classic)** `[prefix]`
+
+```
+\bghp_[0-9A-Za-z]{36}\b
+```
+
+All GitHub v2 tokens carry a checksum in the body; shape match is necessary, not sufficient.
+
+src: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+
+**Personal access token (fine-grained)** `[prefix]`
+
+```
+\bgithub_pat_[0-9A-Za-z_]{82}\b
+```
+
+82 chars after the prefix (22 + '_' + 59).
+
+src: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token
+
+**OAuth access token** `[prefix]`
+
+```
+\bgho_[0-9A-Za-z]{36}\b
+```
+
+src: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps
+
+**User-to-server token** `[prefix]`
+
+```
+\bghu_[0-9A-Za-z]{36}\b
+```
+
+src: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user
+
+**Server-to-server token** `[prefix]`
+
+```
+\bghs_[0-9A-Za-z]{36}\b
+```
+
+src: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/about-authentication-with-a-github-app
+
+**Refresh token** `[prefix]`
+
+```
+\bghr_[0-9A-Za-z]{36}\b
+```
+
+src: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens
+
+### GitLab
+
+**Personal access token** `[prefix]`
+
+```
+\bglpat-[0-9A-Za-z_-]{20}\b
+```
+
+GitLab moved all tokens to typed gl* prefixes.
+
+src: https://docs.gitlab.com/ee/security/token_overview.html
+
+**OAuth application secret** `[prefix]`
+
+```
+\bgloas-[0-9A-Za-z_-]{64}\b
+```
+
+src: https://docs.gitlab.com/ee/security/token_overview.html
+
+**Pipeline trigger token** `[prefix]`
+
+```
+\bglptt-[0-9a-f]{40}\b
+```
+
+src: https://docs.gitlab.com/ee/security/token_overview.html
+
+**Runner authentication token** `[prefix]`
+
+```
+\bglrt-[0-9A-Za-z_-]{20}\b
+```
+
+src: https://docs.gitlab.com/ee/security/token_overview.html
+
+### PyPI
+
+**Upload token** `[prefix]`
+
+```
+\bpypi-AgEIcHlwaS5vcmc[0-9A-Za-z_-]{50,1000}\b
+```
+
+Macaroon. The static segment AgEIcHlwaS5vcmc is base64 'pypi.org'.
+
+src: https://pypi.org/help/#apitoken
+
+### npm
+
+**Access token** `[prefix]`
+
+```
+\bnpm_[0-9A-Za-z]{36}\b
+```
+
+Prefix introduced 2021; final chars encode a CRC32 checksum.
+
+src: https://docs.npmjs.com/about-access-tokens
+
+## AI
+
+### Anthropic
+
+**API key** `[prefix]`
+
+```
+\bsk-ant-api03-[0-9A-Za-z_-]{93}AA\b
+```
+
+Body is fixed length and ends in AA.
+
+src: https://docs.anthropic.com/en/api/getting-started
+
+**Admin API key** `[prefix]`
+
+```
+\bsk-ant-admin01-[0-9A-Za-z_-]{93}AA\b
+```
+
+src: https://docs.anthropic.com/en/api/administration
+
+### Hugging Face
+
+**User access token** `[prefix]`
+
+```
+\bhf_[0-9A-Za-z]{34}\b
+```
+
+src: https://huggingface.co/docs/hub/security-tokens
+
+### OpenAI
+
+**API key** `[prefix]`
+
+```
+\bsk-(?:proj-|svcacct-|admin-)?[0-9A-Za-z_-]{20,74}T3BlbkFJ[0-9A-Za-z_-]{20,74}\b
+```
+
+Modern keys embed the literal T3BlbkFJ (base64 'OpenAI') mid-token. Optional sub-prefixes proj-/svcacct-/admin-.
+
+src: https://platform.openai.com/docs/api-reference/authentication
+
+**API key (legacy, no longer issued)** `[prefix]`
+
+```
+\bsk-[0-9A-Za-z]{48}\b
+```
+
+Pre-2024 format. High false-positive rate (any sk- + 48 alnum). Prefer the T3BlbkFJ-anchored rule above.
+
+src: https://platform.openai.com/docs/api-reference/authentication
+
+## Payments
+
+### PayPal / Braintree
+
+**Access token** `[structure]`
+
+```
+\baccess_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32}\b
+```
+
+Dollar-delimited: access_token$production$<16>$<32>. The mangled entry in older lists never compiled.
+
+src: https://developer.paypal.com/braintree/docs/guides/authorization/gateway-credentials
+
+**Tokenization key (publishable)** `[prefix]`
+
+```
+\b(?:production|sandbox)_[0-9a-z]{8}_[0-9a-z]{16,}\b
+```
+
+Environment-prefixed and publishable (client-side, not a secret) - like Stripe pk_.
+
+src: https://developer.paypal.com/braintree/docs/guides/authorization/tokenization-key
+
+### Picatic
+
+**API key (DEPRECATED service)** `[prefix]`
+
+```
+\bsk_live_[0-9a-z]{32}\b
+```
+
+Picatic shut down in 2018. Kept for historical scanning only. Note the prefix collides with Stripe-style sk_live_.
+
+src: https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+
+### Shopify
+
+**Admin API access token** `[prefix]`
+
+```
+\bshpat_[0-9a-fA-F]{32}\b
+```
+
+shpat_ = admin API. Related prefixes: shpss_ (shared secret), shppa_ (private app), shpca_ (custom app).
+
+src: https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens
+
+**Shared secret** `[prefix]`
+
+```
+\bshpss_[0-9a-fA-F]{32}\b
+```
+
+src: https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens
+
+**Private app access token** `[prefix]`
+
+```
+\bshppa_[0-9a-fA-F]{32}\b
+```
+
+src: https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens
+
+**Custom app access token** `[prefix]`
+
+```
+\bshpca_[0-9a-fA-F]{32}\b
+```
+
+src: https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens
+
+### Square
+
+**Production access token** `[prefix]`
+
+```
+\bEAAA[0-9A-Za-z_-]{60}\b
+```
+
+Current OAuth/personal access token format.
+
+src: https://developer.squareup.com/docs/build-basics/access-tokens
+
+**Access token (legacy)** `[prefix]`
+
+```
+\bsq0atp-[0-9A-Za-z_-]{22}\b
+```
+
+Prefix is sq-zero-atp. The capital-O 'sqOatp' in older lists is wrong.
+
+src: https://developer.squareup.com/docs/build-basics/access-tokens
+
+**OAuth secret (legacy)** `[prefix]`
+
+```
+\bsq0csp-[0-9A-Za-z_-]{43}\b
+```
+
+Prefix is sq-zero-csp.
+
+src: https://developer.squareup.com/docs/build-basics/access-tokens
+
+### Stripe
+
+**Secret / restricted key** `[prefix]`
+
+```
+\b(?:sk|rk)_(?:live|test)_[0-9A-Za-z]{24,99}\b
+```
+
+sk_ = full secret, rk_ = restricted (scoped). live/test mode. Length now variable (legacy 24, newer keys far longer).
+
+src: https://docs.stripe.com/keys
+
+**Publishable key** `[prefix]`
+
+```
+\bpk_(?:live|test)_[0-9A-Za-z]{24,99}\b
+```
+
+Client-side, not secret, but useful for environment fingerprinting.
+
+src: https://docs.stripe.com/keys
+
+## Comms
+
+### Discord
+
+**Bot token** `[structure]`
+
+```
+\b[MNO][0-9A-Za-z_-]{23,25}\.[0-9A-Za-z_-]{6}\.[0-9A-Za-z_-]{27,38}\b
+```
+
+Three dot-separated base64url segments; first encodes the bot user ID. Approximate; verify by decoding segment 1.
+
+src: https://discord.com/developers/docs/topics/oauth2
+
+### Mailchimp
+
+**API key** `[structure]`
+
+```
+\b[0-9a-f]{32}-us[0-9]{1,2}\b
+```
+
+Trailing -us<dc> is the datacenter. The 32-hex prefix alone is not distinctive.
+
+src: https://mailchimp.com/developer/marketing/guides/quick-start/
+
+### Mailgun
+
+**Private API key** `[prefix]`
+
+```
+\bkey-[0-9a-f]{32}\b
+```
+
+src: https://documentation.mailgun.com/docs/mailgun/api-reference/authentication/
+
+### SendGrid
+
+**API key** `[prefix]`
+
+```
+\bSG\.[0-9A-Za-z_-]{22}\.[0-9A-Za-z_-]{43}\b
+```
+
+SG.<22>.<43>
+
+src: https://www.twilio.com/docs/sendgrid/ui/account-and-settings/api-keys
+
+### Slack
+
+**Bot token (xoxb)** `[prefix]`
+
+```
+\bxoxb-[0-9]{10,13}-[0-9]{10,13}-[0-9A-Za-z]{24,34}\b
+```
+
+Segment lengths are now variable; fixed {11}-{11}-{24} from older lists misses current tokens.
+
+src: https://api.slack.com/authentication/token-types
+
+**User token (xoxp)** `[prefix]`
+
+```
+\bxoxp-(?:[0-9]{10,13}-){3}[0-9A-Za-z]{28,34}\b
+```
+
+src: https://api.slack.com/authentication/token-types
+
+**App configuration token (xoxe.xoxp)** `[prefix]`
+
+```
+\bxoxe\.xox[bp]-\d-[0-9A-Za-z]{146,166}\b
+```
+
+src: https://api.slack.com/authentication/rotation
+
+**Refresh token (xoxe)** `[prefix]`
+
+```
+\bxoxe-\d-[0-9A-Za-z]{146,166}\b
+```
+
+src: https://api.slack.com/authentication/rotation
+
+**Incoming webhook URL** `[prefix]`
+
+```
+https://hooks\.slack\.com/services/T[0-9A-Za-z_]{8,12}/B[0-9A-Za-z_]{8,12}/[0-9A-Za-z]{24}
+```
+
+Full URL is the secret. Old bare T../B../.. shape produced false positives.
+
+src: https://api.slack.com/messaging/webhooks
+
+### Twilio
+
+**Account SID** `[prefix]`
+
+```
+\bAC[0-9a-fA-F]{32}\b
+```
+
+Prefix AC + 32 hex. Older '55...' lists were incorrect.
+
+src: https://www.twilio.com/docs/iam/api-keys
+
+**API key SID** `[prefix]`
+
+```
+\bSK[0-9a-fA-F]{32}\b
+```
+
+Pairs with a 32-hex secret (no prefix; gate on a 'twilio' keyword).
+
+src: https://www.twilio.com/docs/iam/api-keys
+
+## Social
+
+### Facebook
+
+**Access token** `[prefix]`
+
+```
+\bEAA[0-9A-Za-z]{90,}\b
+```
+
+Graph API tokens begin EAA. The old fixed 'EAACEdEose0cBA' app prefix is obsolete.
+
+src: https://developers.facebook.com/docs/facebook-login/guides/access-tokens
+
+### Foursquare
+
+**Service API key** `[prefix]`
+
+```
+\bfsq3[0-9A-Za-z/+_-]{40,}={0,2}
+```
+
+Current Places API key prefix fsq3. The old '[0-9a-zA-Z_]{5,31}' client key was too generic to detect; the original list also mis-typed it as a character class.
+
+src: https://docs.foursquare.com/developer/reference/personalization-apis-authentication
+
+### Instagram
+
+**Access token** `[prefix]`
+
+```
+\bIGQ[0-9A-Za-z_-]{100,}
+```
+
+Instagram Basic Display was deprecated Dec 2024; current long-lived tokens (IGQ / Facebook EAA) are issued via the Instagram API with Facebook Login.
+
+src: https://developers.facebook.com/docs/instagram-platform
+
+**Username** `[identifier]`
+
+```
+(?:^|[^\w])@([A-Za-z0-9_.]{1,30})\b
+```
+
+Public handle. RE2-safe rewrite of the old lookahead-based pattern.
+
+src: https://blog.jstassen.com/2016/03/code-regex-for-instagram-username-and-hashtags/
+
+### Twitter / X
+
+**App-only bearer token** `[prefix]`
+
+```
+\bA{22}[0-9A-Za-z%]{80,}
+```
+
+Begins with a long run of 'A' (base64 padding), then URL-encoded body.
+
+src: https://developer.twitter.com/en/docs/authentication/oauth-2-0/bearer-tokens
+
+**OAuth 1.0a access token** `[structure]`
+
+```
+\b[1-9][0-9]+-[0-9A-Za-z]{40}\b
+```
+
+<numeric user id>-<40 alnum>. Structural; pair with a 'twitter' keyword to cut noise.
+
+src: https://developer.twitter.com/en/docs/authentication/oauth-1-0a
+
+**Username / handle** `[identifier]`
+
 ```
 (?:^|[^@\w])@(\w{1,15})\b
 ```
-* [Twitter Text: Regex Library](https://github.com/twitter/twitter-text/blob/master/rb/lib/twitter-text/regex.rb)
 
+Public handle, not a secret. 1-15 word chars, not preceded by @ or word char.
 
+src: https://github.com/twitter/twitter-text/blob/master/rb/lib/twitter-text/regex.rb
 
-# Instagram
-## OAuth 2.0
-```
-[0-9a-fA-F]{7}.[0-9a-fA-F]{32}
-```
-* https://developers.facebook.com/docs/instagram
-## Username
-```
-(?:@)([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:.(?!.))){0,28}(?:[A-Za-z0-9_]))?)
-```
-* https://blog.jstassen.com/2016/03/code-regex-for-instagram-username-and-hashtags/
-## Hashtag
-```
-(?:#)([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:.(?!.))){0,28}(?:[A-Za-z0-9_]))?)
-```
-* https://blog.jstassen.com/2016/03/code-regex-for-instagram-username-and-hashtags/
+## Productivity
 
-# Google
-## API Key
-```
-AIza[0-9A-Za-z-_]{35}
-```
-## OAuth 2.0 Secret Key
-```
-[0-9a-zA-Z-_]{24}
-```
-* https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
-## OAuth 2.0 Auth Code
-```
-4/[0-9A-Za-z-_]+
-```
-* https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
-## OAuth 2.0 Refresh Token
-```
-1/[0-9A-Za-z-]{43}|1/[0-9A-Za-z-]{64}
-```
-* https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
-## OAuth 2.0 Access Token
-```
-ya29.[0-9A-Za-z-_]+
-```
-* https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+### Databricks
 
-# GitHub
-## Personal Access Token (Classic)
+**Personal access token** `[prefix]`
+
 ```
-^ghp_[a-zA-Z0-9]{36}$
-```
-* https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
-## Personal Access Token (Fine-Grained)
-```
-^github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}$
-```
-* https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token
-## OAuth 2.0 Access Token
-```
-^gho_[a-zA-Z0-9]{36}$
-```
-* https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps
-## User-to-Server Access Token
-```
-^ghu_[a-zA-Z0-9]{36}$
-```
-* https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-with-a-github-app-on-behalf-of-a-user
-## Server-to-Server Access Token
-```
-^ghs_[a-zA-Z0-9]{36}$
-```
-* https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/about-authentication-with-a-github-app#authenticating-as-an-installation
-## Refresh Token
-```
-^ghr_[a-zA-Z0-9]{36}$
+\bdapi[0-9a-f]{32}(?:-\d)?\b
 ```
 
-## Foursquare ⚠️
+src: https://docs.databricks.com/en/dev-tools/auth/pat.html
 
-> **Deprecated.** Foursquare retired its consumer-facing Places API for most use cases in 2020. Patterns retained for historical codebase scanning.
+### Datadog
 
-### Client Key 🔧
+**API key (keyword-gated)** `[keyword]`
+
 ```
-[0-9a-zA-Z_]{5,31}
-```
-> ⚡ High FP Risk — the original regex `[0-9a-zA-Z_][5,31]` was malformed (literal character class, not quantifier). Fixed to `{5,31}`.
-
-### Secret Key
-```
-R_[0-9a-f]{32}
-```
-* [NDSS 2019: How Bad Can It Git?](https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf)
-
-## Picatic ⚠️
-
-> **Deprecated.** Picatic was acquired by Eventbrite in 2018 and subsequently shut down. Retained for scanning legacy codebases.
->
-
-## SendGrid
-
-### API Key
-```
-SG\.[a-zA-Z0-9_\-]{22}\.[a-zA-Z0-9_\-]{43}
-```
-* SendGrid API keys are 69–70 characters in three dot-delimited segments: the `SG.` prefix, a 22-character identifier, and a 43-character secret component.
-* [SendGrid: API Keys](https://docs.sendgrid.com/ui/account-and-settings/api-keys)
-* [Gitleaks TOML: SendGrid pattern](https://github.com/Cyberwatch/cyberwatch_api_toolbox/blob/master/.gitleaks.toml)
-
-
-### API Key
-```
-sk_live_[0-9a-z]{32}
-```
-* [NDSS 2019: How Bad Can It Git?](https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf)
-
-## Shopify
-
-### Custom App Admin API Access Token
-```
-shpat_[a-fA-F0-9]{32}
-```
-* [Shopify Community: Token prefix differences](https://community.shopify.com/t/difference-between-admin-api-access-token-starting-with-shpua-shpat-shpss-etc/144725)
-
-### Public App Access Token
-```
-shpca_[a-fA-F0-9]{32}
+(?i)datadog[\w.\-= :'\"]{0,25}([a-f0-9]{32})
 ```
 
-### Private App Access Token (Legacy) ⚠️
-```
-shppa_[a-fA-F0-9]{32}
-```
-> ⚠️ Legacy private app credentials, superseded by custom app tokens in 2022.
+32-hex key, no prefix; gate on a 'datadog' keyword. Often paired with a 40-hex application key.
 
-### App Secret Key
-```
-shpss_[a-fA-F0-9]{32}
-```
-* [Shopify Dev Community: Admin Access Tokens](https://community.shopify.dev/t/new-shopify-dev-dashboard-and-admin-access-token/27645)
-* [Secretlint: Shopify Token Support Issue](https://github.com/secretlint/secretlint/issues/247)
+src: https://docs.datadoghq.com/account_management/api-app-keys/
 
+**Application key (keyword-gated)** `[keyword]`
 
-# Stripe
-## Standard API Key
 ```
-sk_live_[0-9a-zA-Z]{24}
-```
-* https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
-## Restricted API Key
-```
-rk_live_[0-9a-zA-Z]{99}
-```
-* [Stripe API Keys Documentation](https://docs.stripe.com/keys)
-
-# Square
-## Access Token
-```
-sqOatp-[0-9A-Za-z-_]{22}
-```
-* https://developer.squareup.com/reference/square/oauth-api/obtaintoken
-## OAuth Secret
-```
-q0csp-[ 0-9A-Za-z-_]{43}
-```
-* https://developer.squareup.com/reference/square/oauth-api/obtaintoken
-
-## PayPal / Braintree 🔧
-
-### Braintree Access Token (Production)
-```
-access_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32}
-```
-> 🔧 The original pattern `access_token,production$[0-9a-z]{161[0-9a,]{32}` was completely malformed. This corrected version matches the documented Braintree OAuth token format.
-
-* [Braintree: OAuth Access Tokens](https://developer.paypal.com/braintree/docs/guides/extend/oauth/access-tokens/ruby/)
-* [Semgrep: PayPal Braintree Access Token Detector](https://semgrep.dev/r/generic.secrets.security.detected-paypal-braintree-access-token.detected-paypal-braintree-access-token)
-
-### Braintree Tokenization Key
-```
-[a-zA-Z0-9]+_[a-zA-Z0-9]+_[a-zA-Z0-9_]{20,}
-```
-* [Braintree: Tokenization Keys](https://developer.paypal.com/braintree/docs/guides/authorization/tokenization-key/javascript/v3/)
-
-# Amazon Marketing Services
-## Auth Token
-```
-amzn.mws.[0-9a-f]{8}-[0-9a-f]{4}-10-9a-f1{4}-[0-9a,]{4}-[0-9a-f]{12}
+(?i)datadog[\w.\-= :'\"]{0,25}([a-f0-9]{40})
 ```
 
-# Twilio
-## Access Token
+40-hex application key, no prefix; keyword-gated.
+
+src: https://docs.datadoghq.com/account_management/api-app-keys/
+
+### Doppler
+
+**Personal token** `[prefix]`
+
 ```
-55[0-9a-fA-F]{32}
+\bdp\.pt\.[0-9A-Za-z]{43}\b
 ```
 
-# Mailgun
-## Access Token
+Other Doppler scopes use dp.st. (service), dp.sa. (service account).
+
+src: https://docs.doppler.com/docs/service-tokens
+
+### Linear
+
+**API key** `[prefix]`
+
 ```
-key-[0-9a-zA-Z]{32}
+\blin_api_[0-9A-Za-z]{40}\b
 ```
 
-# MailChimp
-## Access Token
+src: https://developers.linear.app/docs/graphql/working-with-the-graphql-api
+
+### WakaTime
+
+**API key** `[prefix]`
+
 ```
-[0-9a-f]{32}-us[0-9]{1,2}
+\bwaka_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b
 ```
 
-## npm
+waka_ + UUID.
 
-### Access Token (New Format, 2021+)
-```
-npm_[A-Za-z0-9]{36}
-```
-* npm introduced the `npm_` prefix in September 2021 to enable unambiguous secret scanning. The last 6 characters encode a CRC32 checksum (Base62) for automated false-positive reduction.
-* [GitHub Changelog: npm has a new access token format](https://github.blog/changelog/2021-09-23-npm-has-a-new-access-token-format/)
-* [npm Docs: About Access Tokens](https://docs.npmjs.com/about-access-tokens/)
-
-### Legacy Access Token (UUID format) ⚠️
-```
-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
-```
-> ⚠️ Deprecated format. Replaced by `npm_` prefix tokens. Retained for scanning older `.npmrc` files and CI configs.
+src: https://wakatime.com/developers
 
 
-# Slack
-## OAuth v2 Bot Access Token
-```
-xoxb-[0-9]{11}-[0-9]{11}-[0-9a-zA-Z]{24}
-```
-* https://api.slack.com/authentication/oauth-v2
-## OAuth v2 User Access Token
-```
-xoxp-[0-9]{11}-[0-9]{11}-[0-9a-zA-Z]{24}
-```
-* https://api.slack.com/authentication/oauth-v2
-## OAuth v2 Configuration Token
-```
-xoxe.xoxp-1-[0-9a-zA-Z]{166}
-```
-* https://api.slack.com/authentication/rotation
-## OAuth v2 Refresh Token
-```
-xoxe-1-[0-9a-zA-Z]{147}
-```
-* https://api.slack.com/authentication/rotation
-## Webhook
-```
-T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}
-```
-* https://api.slack.com/messaging/webhooks
-
-## Amazon Web Services (AWS)
-
-### Long-Term IAM Access Key ID
-```
-AKIA[0-9A-Z]{16}
-```
-* AWS IAM long-term credentials. Characters are drawn from `[A-Z2-7]` (Base32); the `AKIA` prefix uniquely identifies long-term IAM user keys.
-* [AWS Access Key ID Formats — Aidan Steele's Blog](https://awsteele.com/blog/2020/09/26/aws-access-key-format.html)
-* [Summit Route: AWS Security Credential Formats](https://summitroute.com/blog/2018/06/20/aws_security_credential_formats/)
-
-### Temporary STS Access Key ID
-```
-ASIA[0-9A-Z]{16}
-```
-* Temporary credentials issued via `AWS STS AssumeRole`, `GetSessionToken`, and federated identity operations. Accompanied by a session token; rotate within 15 min – 36 hrs.
-* [AWS STS GetAccessKeyInfo](https://docs.aws.amazon.com/STS/latest/APIReference/API_GetAccessKeyInfo.html)
-
-### Additional IAM Identifier Prefixes
-```
-(AKIA|ASIA|AROA|AIDA|ANPA|ANVA|APKA)[0-9A-Z]{16}
-```
-| Prefix | Type |
-|--------|------|
-| `AKIA` | Long-term IAM user key |
-| `ASIA` | STS temporary key |
-| `AROA` | IAM role ID |
-| `AIDA` | IAM user ID |
-| `ANPA` | Managed policy ID |
-| `ANVA` | EC2 instance profile |
-| `APKA` | Public key |
-
-* [AWS Access Key Formats — Summit Route](https://summitroute.com/blog/2018/06/20/aws_security_credential_formats/)
-
-### Secret Access Key
-```
-(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])
-```
-> ⚡ High FP Risk — always pair with adjacent `AKIA`/`ASIA` key detection or context keywords (`aws_secret_access_key`, `AWS_SECRET`). Standalone use will produce many false positives.
-
-* [AWS Best Practices for Managing Access Keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#lock-away-credentials)
-
-## GitLab
-
-### Personal Access Token
-```
-glpat-[0-9a-zA-Z\-]{20}
-```
-* `glpat-` prefix introduced in GitLab 14.5 (Oct 2021) as the default for all new PATs.
-* [GitLab: Personal Access Tokens](https://docs.gitlab.com/user/profile/personal_access_tokens/)
-* [GitGuardian: GitLab Token Detector](https://docs.gitguardian.com/secrets-detection/secrets-detection-engine/detectors/specifics/gitlab_token)
-
-### Pipeline Trigger Token
-```
-glptt-[0-9a-zA-Z\-]{20}
-```
-* [GitLab: Token Overview](https://docs.gitlab.com/security/tokens/)
-
-### Runner Registration Token (Legacy) ⚠️
-```
-GR1348941[0-9a-zA-Z\-_]{20}
-```
-> ⚠️ Deprecated in GitLab 15.6; removed in 17.0. Retained for scanning legacy CI configs.
-
-* [GitLab: Token Overview](https://docs.gitlab.com/security/tokens/)
-
-
-# Google Cloud Platform
-## OAuth 2.0
-```
-[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
-```
-## API Key
-```
-[A-Za-z0-9_]{21}--[A-Za-z0-9_]{8}
-```
-
-# Heroku
-## API Key
-```
-[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
-```
-* https://devcenter.heroku.com/articles/platform-api-quickstart
-## OAuth 2.0
-```
-[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
-```
-
-## OpenAI
-
-### Project API Key (Current)
-```
-sk-proj-[A-Za-z0-9_\-]{48,}
-```
-* Current standard format (2024+). Project-scoped keys replace legacy user keys. Length is variable (typically 100–200 characters total).
-* [OpenAI: API Keys](https://platform.openai.com/api-keys)
-* [OpenAI Community: Project API Key Length](https://community.openai.com/t/project-api-key-length-has-it-changed-from-48-to-156/920777)
-
-### Legacy User API Key (Classic, pre-2024) ⚠️
-```
-sk-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}
-```
-> ⚠️ Legacy format. The `T3BlbkFJ` embedded string (Base64 for `OpenAI`) was a static artifact of the original key generation scheme. OpenAI stopped issuing these; existing keys remain valid until revoked.
-
-* [OpenAI Community: Valid characters for API key](https://community.openai.com/t/what-are-the-valid-characters-for-the-apikey/288643)
-
-### Service Account Key
-```
-sk-svcacct-[A-Za-z0-9_\-]{48,}
-```
-* Service accounts created via the OpenAI dashboard for automated/programmatic access.
-
-
-
-## Vercel
-
-### Personal Access Token (New Format, 2024+)
-```
-vcp_[a-zA-Z0-9]{24}
-```
-* Vercel introduced new prefixed token formats in 2024. Personal access tokens use `vcp_`. Leaked tokens in public repos/gists are now automatically revoked via GitHub secret scanning.
-* [Vercel: Introducing new token formats and secret scanning](https://vercel.com/changelog/new-token-formats-and-secret-scanning)
-* [GitGuardian: Vercel API Access Token](https://docs.gitguardian.com/secrets-detection/secrets-detection-engine/detectors/specifics/vercel_api_access_token)
-
-
-# WakaTime
-## API Key
-```
-waka_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
-```
+[^verify]: Shape-matching vs. live verification, and the staleness of copied regex lists, are examined in `sniffer-audit.md`. Full bibliography: `references.bib`, `references.md`.
+[^ndss]: Meli, McNiece, Reaves. *How Bad Can It Git? Characterizing Secret Leakage in Public GitHub Repositories.* NDSS 2019. doi:10.14722/ndss.2019.23418.
