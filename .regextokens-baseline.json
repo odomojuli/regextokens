@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generated": "2026-07-02",
+  "findings": [
+    {
+      "fingerprint": "506db3ae77796d7ebf778a18daf6abbc",
+      "path": "build_patterns.py",
+      "pattern_id": "gcp-service-account-key",
+      "line": 1327
+    },
+    {
+      "fingerprint": "aa755cc97d00efa68640bf9252cfce73",
+      "path": "build_patterns.py",
+      "pattern_id": "gcp-service-account-key",
+      "line": 1327
+    },
+    {
+      "fingerprint": "18034d800fde8f4cfd5a4cf5315c914a",
+      "path": "build_patterns.py",
+      "pattern_id": "jwt",
+      "line": 50
+    },
+    {
+      "fingerprint": "9f4a76631df8b18c74a3c07b55cc3e64",
+      "path": "build_patterns.py",
+      "pattern_id": "private-key-block",
+      "line": 64
+    },
+    {
+      "fingerprint": "bd0d269a356efb47b538ae5bfa3f2132",
+      "path": "build_patterns.py",
+      "pattern_id": "private-key-block",
+      "line": 65
+    },
+    {
+      "fingerprint": "e4abf25e19310313bc580cec53f8d5ce",
+      "path": "build_patterns.py",
+      "pattern_id": "private-key-block",
+      "line": 66
+    }
+  ],
+  "allow": {
+    "paths": [],
+    "pattern_ids": []
+  }
+}

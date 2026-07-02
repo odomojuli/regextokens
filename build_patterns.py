@@ -918,6 +918,529 @@ DATA = [
         "refs": ["https://developer.paypal.com/braintree/docs/guides/authorization/tokenization-key"],
         "notes": "Environment-prefixed and publishable (client-side, not a secret) - like Stripe pk_.",
     },
+
+    # ==================================================================
+    # Enhanced coverage (2026). Every entry below is sourced to primary
+    # provider documentation, changelog, or first-party source code.
+    # Bodies flagged "empirical" are observed, not spec-documented; their
+    # notes say so and use ranged quantifiers rather than false precision.
+    # ==================================================================
+
+    # ---- Microsoft Azure ---------------------------------------------
+    {
+        "id": "azure-storage-account-key",
+        "provider": "Microsoft Azure",
+        "category": "Cloud",
+        "name": "Storage account access key (keyword-gated)",
+        "regex": r"(?i)(?:AccountKey|SharedAccessKey)[\w.\-= :'\"]{0,25}([A-Za-z0-9+/]{86}==)",
+        "strategy": "keyword",
+        "examples": ["AccountKey=" + "A" * 86 + "=="],
+        "non_examples": ["AccountKey=" + "A" * 40],
+        "refs": [
+            "https://learn.microsoft.com/en-us/purview/sit-defn-azure-storage-account-access-key",
+            "https://learn.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage",
+        ],
+        "notes": "88-char base64 (86 chars + '=='), a 512-bit key. Same shape as Cosmos DB / Service Bus / Event Hubs SharedAccessKey; the keyword gate disambiguates. 'AccountKey' and 'SharedAccessKey' are Microsoft's own detection keywords.",
+    },
+    {
+        "id": "azure-devops-pat",
+        "provider": "Microsoft Azure",
+        "category": "Cloud",
+        "name": "Azure DevOps personal access token (keyword-gated)",
+        "regex": r"(?i)(?:dev\.azure\.com|visualstudio\.com|azure[_ .\-]?devops|System\.AccessToken)[\w.\-= :'\"/@]{0,40}([A-Za-z0-9]{52,88})",
+        "strategy": "keyword",
+        "examples": ["azure_devops_pat = " + "A" * 84, "dev.azure.com/org System.AccessToken: " + "A" * 52],
+        "non_examples": ["azure_devops_pat = " + "A" * 40],
+        "refs": [
+            "https://learn.microsoft.com/en-us/azure/devops/release-notes/2024/sprint-241-update",
+            "https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate",
+        ],
+        "notes": "New PATs are 84 chars (52 randomized); legacy PATs are 52 chars. No reliable standalone prefix, so gated on an Azure DevOps keyword. The '84 chars / 52 random' length is documented (sprint 241); the exact body charset and any embedded marker are NOT primary-documented, so this stays keyword-gated rather than a fixed-offset structural rule. Microsoft is deprecating PATs in favor of Entra tokens.",
+    },
+
+    # ---- HashiCorp Vault ---------------------------------------------
+    {
+        "id": "vault-service-token",
+        "provider": "HashiCorp Vault",
+        "category": "Cloud",
+        "name": "Service token (hvs.)",
+        "regex": r"\bhvs\.[A-Za-z0-9_-]{24,}",
+        "strategy": "prefix",
+        "examples": ["hvs." + "A" * 24, "hvs." + "A" * 90],
+        "non_examples": ["hvs." + "A" * 10, "s." + "A" * 24],
+        "refs": ["https://developer.hashicorp.com/vault/docs/concepts/tokens"],
+        "notes": "Vault 1.10+ typed prefix: hvs.=service, hvb.=batch, hvr.=recovery (legacy s./b./r.). Vault documents tokens as opaque with '24 or more' random chars; length left open. Server-side-consistent and namespaced tokens run much longer (base64url body, hence _-).",
+    },
+    {
+        "id": "vault-batch-token",
+        "provider": "HashiCorp Vault",
+        "category": "Cloud",
+        "name": "Batch token (hvb.)",
+        "regex": r"\bhvb\.[A-Za-z0-9_-]{24,}",
+        "strategy": "prefix",
+        "examples": ["hvb." + "A" * 24],
+        "non_examples": ["hvb." + "A" * 10],
+        "refs": ["https://developer.hashicorp.com/vault/docs/concepts/tokens"],
+        "notes": "Batch tokens are long encrypted blobs; the hvb. prefix is the reliable anchor.",
+    },
+
+    # ---- HashiCorp Terraform -----------------------------------------
+    {
+        "id": "terraform-cloud-token",
+        "provider": "HashiCorp Terraform",
+        "category": "Cloud",
+        "name": "HCP Terraform / Terraform Cloud API token",
+        "regex": r"\b[A-Za-z0-9]{14}\.atlasv1\.[A-Za-z0-9]{60,70}\b",
+        "strategy": "structure",
+        "examples": ["A" * 14 + ".atlasv1." + "A" * 67],
+        "non_examples": ["A" * 14 + ".atlasv1." + "A" * 10],
+        "refs": ["https://developer.hashicorp.com/terraform/cloud-docs/api-docs/team-tokens"],
+        "notes": "Distinctive '.atlasv1.' infix (Atlas-era marker). One shape covers user, team, organization, audit, and agent tokens, and Terraform Enterprise; type is not distinguishable from shape.",
+    },
+
+    # ---- Docker ------------------------------------------------------
+    {
+        "id": "docker-hub-pat",
+        "provider": "Docker",
+        "category": "Source / CI",
+        "name": "Docker Hub personal access token",
+        "regex": r"\bdckr_pat_[A-Za-z0-9_-]{20,64}\b",
+        "strategy": "prefix",
+        "examples": ["dckr_pat_" + "A" * 27],
+        "non_examples": ["dckr_pat_" + "A" * 10],
+        "refs": ["https://docs.docker.com/scout/explore/metrics-exporter/"],
+        "notes": "Prefix dckr_pat_ is documented; body length is community-observed (~27), hence the range. Sibling dckr_oat_ = organization access token. Older Hub tokens were bare UUIDs.",
+    },
+
+    # ---- CircleCI ----------------------------------------------------
+    {
+        "id": "circleci-personal-token",
+        "provider": "CircleCI",
+        "category": "Source / CI",
+        "name": "Personal API token (CCIPAT)",
+        "regex": r"\bCCIPAT_[1-9A-HJ-NP-Za-km-z]{20,30}_[0-9a-f]{40}\b",
+        "strategy": "prefix",
+        "examples": ["CCIPAT_" + "A" * 22 + "_" + "a" * 40],
+        "non_examples": ["CCIPAT_" + "A" * 22 + "_" + "a" * 10],
+        "refs": ["https://circleci.com/changelog/new-format-for-api-access-tokens/"],
+        "notes": "CCIPAT_<base58 id>_<40-hex>, introduced July 2023 (CCIPRJ_ for project tokens). Base58 alphabet excludes 0/O/I/l. Legacy tokens are bare 40-hex (only catchable keyword-gated).",
+    },
+    {
+        "id": "circleci-project-token",
+        "provider": "CircleCI",
+        "category": "Source / CI",
+        "name": "Project API token (CCIPRJ)",
+        "regex": r"\bCCIPRJ_[1-9A-HJ-NP-Za-km-z]{20,30}_[0-9a-f]{40}\b",
+        "strategy": "prefix",
+        "examples": ["CCIPRJ_" + "A" * 22 + "_" + "a" * 40],
+        "non_examples": ["CCIPRJ_" + "A" * 22 + "_" + "a" * 10],
+        "refs": ["https://circleci.com/changelog/new-format-for-api-access-tokens/"],
+        "notes": "Project-scoped sibling of CCIPAT_.",
+    },
+
+    # ---- Grafana -----------------------------------------------------
+    {
+        "id": "grafana-service-account-token",
+        "provider": "Grafana",
+        "category": "Productivity",
+        "name": "Service account token (glsa_)",
+        "regex": r"\bglsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8}\b",
+        "strategy": "structure",
+        "examples": ["glsa_" + "A" * 32 + "_" + "a" * 8],
+        "non_examples": ["glsa_" + "A" * 32 + "_" + "a" * 4, "glsa_" + "A" * 32],
+        "refs": [
+            "https://grafana.com/blog/new-in-grafana-9-1-service-accounts-are-now-ga/",
+            "https://grafana.com/docs/grafana/latest/administration/service-accounts/",
+        ],
+        "notes": "glsa_<32 alnum>_<8-hex checksum>. Grafana added the trailing checksum specifically for scanner validation. Replaces legacy base64 API keys (eyJrIjoi...).",
+    },
+    {
+        "id": "grafana-cloud-token",
+        "provider": "Grafana",
+        "category": "Productivity",
+        "name": "Cloud access policy token (glc_)",
+        "regex": r"\bglc_eyJ[A-Za-z0-9+/=]{32,}",
+        "strategy": "prefix",
+        "examples": ["glc_eyJ" + "A" * 40],
+        "non_examples": ["glc_eyJ" + "A" * 5, "glc_" + "A" * 40],
+        "refs": ["https://grafana.com/docs/grafana-cloud/developer-resources/api-reference/cloud-api/"],
+        "notes": "glc_ + base64 of a JSON payload, so the body always begins 'eyJ'. Length varies with the embedded token name. May carry base64 '=' padding (no trailing \\b).",
+    },
+
+    # ---- Sentry ------------------------------------------------------
+    {
+        "id": "sentry-user-token",
+        "provider": "Sentry",
+        "category": "Productivity",
+        "name": "User auth token (sntryu_)",
+        "regex": r"\bsntryu_[0-9a-f]{64}\b",
+        "strategy": "prefix",
+        "examples": ["sntryu_" + "a" * 64],
+        "non_examples": ["sntryu_" + "a" * 20],
+        "refs": ["https://github.com/getsentry/sentry/blob/master/src/sentry/types/token.py"],
+        "notes": "sntryu_ + 64-hex (token_hex(32)). First-party prefixes: sntryu_=user, sntrys_=org, sntrya_=user-app, sntryi_=integration. Legacy tokens are bare 64-hex.",
+    },
+    {
+        "id": "sentry-org-token",
+        "provider": "Sentry",
+        "category": "Productivity",
+        "name": "Organization auth token (sntrys_)",
+        "regex": r"\bsntrys_eyJ[A-Za-z0-9+/=]{8,}_[A-Za-z0-9+/]{43}",
+        "strategy": "prefix",
+        "examples": ["sntrys_eyJ" + "A" * 15 + "_" + "A" * 43],
+        "non_examples": ["sntrys_" + "A" * 20],
+        "refs": ["https://github.com/getsentry/sentry/blob/master/src/sentry/utils/security/orgauthtoken_token.py"],
+        "notes": "sntrys_ + base64(JSON payload, begins 'eyJ') + '_' + 43-char base64 secret (token_bytes(32), padding stripped). Exactly two underscores overall. Secret may end in +// (no trailing \\b).",
+    },
+
+    # ---- Tailscale ---------------------------------------------------
+    {
+        "id": "tailscale-key",
+        "provider": "Tailscale",
+        "category": "Cloud",
+        "name": "Auth / API / OAuth key (tskey-)",
+        "regex": r"\btskey-(?:api|auth|client|scim|webhook)-[A-Za-z0-9]{6,20}-[A-Za-z0-9]{12,64}\b",
+        "strategy": "prefix",
+        "examples": ["tskey-auth-" + "A" * 12 + "-" + "A" * 30, "tskey-api-" + "A" * 12 + "-" + "A" * 18],
+        "non_examples": ["tskey-auth-" + "A" * 4 + "-" + "A" * 30, "tskey-foo-" + "A" * 12 + "-" + "A" * 30],
+        "refs": ["https://tailscale.com/docs/reference/key-prefixes"],
+        "notes": "tskey-<type>-<keyID>-<secret>; types api/auth/client/scim/webhook. Keys are case-sensitive. Segment lengths are not formally documented (ranged). Auth keys are the most commonly leaked (headless/CI use).",
+    },
+
+    # ---- Pulumi ------------------------------------------------------
+    {
+        "id": "pulumi-access-token",
+        "provider": "Pulumi",
+        "category": "Cloud",
+        "name": "Access token (pul-)",
+        "regex": r"\bpul-[0-9a-f]{40}\b",
+        "strategy": "prefix",
+        "examples": ["pul-" + "a" * 40],
+        "non_examples": ["pul-" + "a" * 10],
+        "refs": ["https://www.pulumi.com/docs/reference/cloud-rest-api/access-tokens/"],
+        "notes": "Prefix pul- is documented; the 40-hex body is from Pulumi's earlier published example (current docs show only the prefix). Personal, org, and team tokens all share pul-.",
+    },
+
+    # ---- Netlify -----------------------------------------------------
+    {
+        "id": "netlify-pat",
+        "provider": "Netlify",
+        "category": "Cloud",
+        "name": "Personal access token (nfp_)",
+        "regex": r"\bnfp_[A-Za-z0-9_-]{36}\b",
+        "strategy": "prefix",
+        "examples": ["nfp_" + "A" * 36],
+        "non_examples": ["nfp_" + "A" * 10],
+        "refs": ["https://answers.netlify.com/t/change-to-the-netlify-authentication-token-format/106146"],
+        "notes": "Nov 2023 format: nf-family prefixes nfp_ (PAT), nfc_ (CLI), nfo_ (OAuth), nfu_ (app), nfb_ (build); 40-char envelope. Pre-Nov-2023 tokens are unprefixed.",
+    },
+
+    # ---- Fly.io ------------------------------------------------------
+    {
+        "id": "fly-io-token",
+        "provider": "Fly.io",
+        "category": "Cloud",
+        "name": "API token / macaroon (fm2_)",
+        "regex": r"\bfm2_[A-Za-z0-9+/=]{40,}",
+        "strategy": "prefix",
+        "examples": ["fm2_" + "A" * 60],
+        "non_examples": ["fm2_" + "A" * 10],
+        "refs": [
+            "https://fly.io/docs/security/tokens/",
+            "https://github.com/superfly/macaroon",
+        ],
+        "notes": "Macaroon: MsgPack-encoded, base64'd, then 'fm2_' prepended (per Fly's own repo, 'so it's easy to grep for them'). Sent as 'FlyV1 fm2_...'; multiples are comma-joined, each with its own fm2_.",
+    },
+
+    # ---- Stripe (webhook) --------------------------------------------
+    {
+        "id": "stripe-webhook-secret",
+        "provider": "Stripe",
+        "category": "Payments",
+        "name": "Webhook signing secret (whsec_)",
+        "regex": r"\bwhsec_[A-Za-z0-9]{32,64}\b",
+        "strategy": "prefix",
+        "examples": ["whsec_" + "A" * 32],
+        "non_examples": ["whsec_" + "A" * 10],
+        "refs": ["https://docs.stripe.com/webhooks"],
+        "notes": "HMAC signing secret (verify-only, but still sensitive: it lets an attacker forge webhook events). Prefix documented; body length empirical (32 dashboard, up to 64 from `stripe listen`).",
+    },
+
+    # ---- AI providers ------------------------------------------------
+    {
+        "id": "groq-api-key",
+        "provider": "Groq",
+        "category": "AI",
+        "name": "API key (gsk_)",
+        "regex": r"\bgsk_[A-Za-z0-9]{32,64}\b",
+        "strategy": "prefix",
+        "examples": ["gsk_" + "A" * 52],
+        "non_examples": ["gsk_" + "A" * 10],
+        "refs": ["https://console.groq.com/docs/production-readiness/security-onboarding"],
+        "notes": "Prefix gsk_ documented in Groq's own examples; body length community-observed (~52), hence the range.",
+    },
+    {
+        "id": "replicate-api-token",
+        "provider": "Replicate",
+        "category": "AI",
+        "name": "API token (r8_)",
+        "regex": r"\br8_[A-Za-z0-9]{35,40}\b",
+        "strategy": "prefix",
+        "examples": ["r8_" + "A" * 37],
+        "non_examples": ["r8_" + "A" * 10],
+        "refs": ["https://replicate.com/docs/reference/http"],
+        "notes": "Prefix r8_; body length (~37) inferred from a length-preserving mask in Replicate's docs (r8_Hw + 35 masked chars), hence the range.",
+    },
+    {
+        "id": "openrouter-api-key",
+        "provider": "OpenRouter",
+        "category": "AI",
+        "name": "API key (sk-or-v1-)",
+        "regex": r"\bsk-or-v1-[A-Za-z0-9_-]{32,128}\b",
+        "strategy": "prefix",
+        "examples": ["sk-or-v1-" + "a" * 64],
+        "non_examples": ["sk-or-v1-" + "a" * 10],
+        "refs": ["https://openrouter.ai/docs/api/reference/authentication"],
+        "notes": "Distinctive sk-or-v1- prefix distinguishes from OpenAI sk-; match this before any generic sk- rule. Body observed as 64-hex; ranged to avoid false precision.",
+    },
+    {
+        "id": "xai-api-key",
+        "provider": "xAI",
+        "category": "AI",
+        "name": "API key (xai-)",
+        "regex": r"\bxai-[A-Za-z0-9]{60,120}\b",
+        "strategy": "prefix",
+        "examples": ["xai-" + "A" * 80],
+        "non_examples": ["xai-" + "A" * 10],
+        "refs": ["https://docs.x.ai/docs/api-reference"],
+        "notes": "Prefix xai- is solid; docs example is ~84 chars (~80 body). Exact length not formally documented, hence the range.",
+    },
+    {
+        "id": "perplexity-api-key",
+        "provider": "Perplexity",
+        "category": "AI",
+        "name": "API key (pplx-)",
+        "regex": r"\bpplx-[A-Za-z0-9]{32,64}\b",
+        "strategy": "prefix",
+        "examples": ["pplx-" + "A" * 48],
+        "non_examples": ["pplx-" + "A" * 10, "pplx-api"],
+        "refs": ["https://docs.perplexity.ai/guides/api-key-management"],
+        "notes": "Prefix pplx- also appears in Perplexity model/product names (pplx-api, pplx-70b-*); the 32-char floor prevents matching those. Body length empirical.",
+    },
+    {
+        "id": "deepseek-api-key",
+        "provider": "DeepSeek",
+        "category": "AI",
+        "name": "API key (keyword-gated)",
+        "regex": r"(?i)deepseek[\w.\-= :'\"]{0,25}(sk-[A-Za-z0-9]{24,64})",
+        "strategy": "keyword",
+        "examples": ['deepseek_api_key = "sk-' + "A" * 32 + '"'],
+        "non_examples": ["deepseek key sk-" + "A" * 10],
+        "refs": ["https://api-docs.deepseek.com/"],
+        "notes": "DeepSeek keys are sk-prefixed and collide fully with OpenAI (and partially OpenRouter) sk-. Keyword gate is mandatory, mirroring the AWS secret-key precedent. Body length empirical.",
+    },
+    {
+        "id": "mistral-api-key",
+        "provider": "Mistral AI",
+        "category": "AI",
+        "name": "API key (keyword-gated)",
+        "regex": r"(?i)mistral[\w.\-= :'\"]{0,25}([A-Za-z0-9]{32})",
+        "strategy": "keyword",
+        "examples": ['mistral_api_key = "' + "A" * 32 + '"'],
+        "non_examples": ['mistral_api_key = "' + "A" * 20 + '"'],
+        "refs": ["https://docs.mistral.ai/getting-started/quickstarts/"],
+        "notes": "Mistral documents no prefix, length, or format (keys are opaque). The 32-alnum body is observed-only; keyword-gated to stay usable.",
+    },
+    {
+        "id": "cohere-api-key",
+        "provider": "Cohere",
+        "category": "AI",
+        "name": "API key (keyword-gated)",
+        "regex": r"(?i)cohere[\w.\-= :'\"]{0,25}([A-Za-z0-9]{40})",
+        "strategy": "keyword",
+        "examples": ['cohere_api_key = "' + "A" * 40 + '"'],
+        "non_examples": ['cohere_api_key = "' + "A" * 20 + '"'],
+        "refs": ["https://docs.cohere.com/reference/about"],
+        "notes": "Cohere documents no key format (only 'BEARER [API_KEY]'). The 40-alnum body is observed-only; keyword-gated.",
+    },
+    {
+        "id": "fireworks-api-key",
+        "provider": "Fireworks AI",
+        "category": "AI",
+        "name": "API key (keyword-gated fw_)",
+        "regex": r"(?i)fireworks[\w.\-= :'\"]{0,25}(fw_[A-Za-z0-9]{16,48})",
+        "strategy": "keyword",
+        "examples": ['fireworks_api_key = "fw_' + "A" * 24 + '"'],
+        "non_examples": ["fireworks fw_" + "A" * 5],
+        "refs": ["https://docs.fireworks.ai/tools-sdks/python-client/the-tutorial"],
+        "notes": "Prefix fw_ is documented but short and collision-prone (fw_version...); keyword-gated rather than shipped as a bare prefix. Body length empirical (docs example is truncated).",
+    },
+    {
+        "id": "huggingface-org-token-legacy",
+        "provider": "Hugging Face",
+        "category": "AI",
+        "name": "Organization API token (legacy, api_org_)",
+        "regex": r"\bapi_org_[A-Za-z0-9]{16,48}\b",
+        "strategy": "prefix",
+        "examples": ["api_org_" + "A" * 32],
+        "non_examples": ["api_org_" + "A" * 5],
+        "refs": ["https://huggingface.co/docs/api-inference/quicktour"],
+        "notes": "Legacy org token (deprecated and blocked in the huggingface_hub client). Current tokens use hf_. Kept for historical scanning of old leaks. Body length undocumented.",
+    },
+
+    # ---- Slack (app-level) -------------------------------------------
+    {
+        "id": "slack-app-token",
+        "provider": "Slack",
+        "category": "Comms",
+        "name": "App-level token (xapp)",
+        "regex": r"\bxapp-[0-9]-[A-Z0-9]+-[0-9]+-[0-9a-f]{40,80}\b",
+        "strategy": "prefix",
+        "examples": ["xapp-1-A" + "1" * 10 + "-" + "1" * 11 + "-" + "a" * 64],
+        "non_examples": ["xapp-1-A" + "1" * 10 + "-" + "1" * 11 + "-" + "a" * 10],
+        "refs": ["https://docs.slack.dev/authentication/tokens"],
+        "notes": "Prefix xapp- is documented (app-level tokens, Socket Mode). Segment structure (xapp-<n>-A<appid>-<digits>-<hex>) is inferred from Slack's synthetic examples plus field observation.",
+    },
+
+    # ---- Telegram ----------------------------------------------------
+    {
+        "id": "telegram-bot-token",
+        "provider": "Telegram",
+        "category": "Comms",
+        "name": "Bot token",
+        "regex": r"\b[0-9]{8,12}:AA[0-9A-Za-z_-]{32,34}\b",
+        "strategy": "structure",
+        "examples": ["1234567890:AA" + "A" * 32],
+        "non_examples": ["1234567890:AA" + "A" * 5, "1234567890:BB" + "A" * 32],
+        "refs": ["https://core.telegram.org/bots/features"],
+        "notes": "<bot_id>:AA<body>; body starts 'AA' (base64url). Length from the docs example ('a string, like ...'), not a hard spec. Leading \\b won't match when the token is glued to the word 'bot' in api.telegram.org URLs.",
+    },
+
+    # ---- Google Cloud service account --------------------------------
+    {
+        "id": "gcp-service-account-key",
+        "provider": "Google",
+        "category": "Cloud",
+        "name": "Service account key file marker",
+        "regex": r"\"type\"\s*:\s*\"service_account\"",
+        "strategy": "structure",
+        "examples": ['{"type": "service_account", "project_id": "x"}', '"type":"service_account"'],
+        "non_examples": ['"type": "user"', '"type": "authorized_user"'],
+        "refs": ["https://cloud.google.com/iam/docs/keys-create-delete"],
+        "notes": "Fingerprints a GCP service-account key file. The live secret is the 'private_key' value in the same file (caught by private-key-block). Documented JSON shape includes type/private_key_id/private_key/client_email.",
+    },
+
+    # ---- age encryption ----------------------------------------------
+    {
+        "id": "age-secret-key",
+        "provider": "age",
+        "category": "Generic / Crypto",
+        "name": "age X25519 secret key",
+        "regex": r"\bAGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}\b",
+        "strategy": "structure",
+        "examples": ["AGE-SECRET-KEY-1" + "Q" * 58],
+        "non_examples": ["AGE-SECRET-KEY-1" + "Q" * 20],
+        "refs": ["https://github.com/C2SP/C2SP/blob/main/age.md"],
+        "notes": "Bech32 with HRP 'AGE-SECRET-KEY-'; a 32-byte key encodes to 58 chars after the '1' separator (uppercase). Recipients (age1...) are public, not secrets. Post-quantum variant uses HRP AGE-SECRET-KEY-PQ-.",
+    },
+
+    # ---- Atlassian ---------------------------------------------------
+    {
+        "id": "atlassian-api-token",
+        "provider": "Atlassian",
+        "category": "Productivity",
+        "name": "Cloud API token (ATATT3)",
+        "regex": r"\bATATT3[A-Za-z0-9_=-]{100,}",
+        "strategy": "prefix",
+        "examples": ["ATATT3" + "A" * 180],
+        "non_examples": ["ATATT3" + "A" * 20],
+        "refs": ["https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/"],
+        "notes": "Atlassian staff document the 'ATAT' token-prefix family (ATAT=API token, ATBB=app password, ATCT=access token); the full 'ATATT3' anchor is empirically constant. Atlassian states tokens are variable-length ('do not rely on fixed API token length'), so only the prefix is anchored. Pre-Dec-2024 tokens expired by May 2026.",
+    },
+
+    # ---- Notion ------------------------------------------------------
+    {
+        "id": "notion-integration-token",
+        "provider": "Notion",
+        "category": "Productivity",
+        "name": "Integration token (ntn_)",
+        "regex": r"\bntn_[A-Za-z0-9]{40,60}\b",
+        "strategy": "prefix",
+        "examples": ["ntn_" + "A" * 46],
+        "non_examples": ["ntn_" + "A" * 10],
+        "refs": ["https://developers.notion.com/page/changelog"],
+        "notes": "ntn_ replaced the secret_ prefix for new tokens (Sept 2024), explicitly to help secret scanners. Notion advises against regex-validating tokens (treat as opaque), so body length is ranged. Legacy secret_ tokens still work.",
+    },
+
+    # ---- Airtable ----------------------------------------------------
+    {
+        "id": "airtable-pat",
+        "provider": "Airtable",
+        "category": "Productivity",
+        "name": "Personal access token",
+        "regex": r"\bpat[A-Za-z0-9]{14}\.[0-9a-f]{64}\b",
+        "strategy": "structure",
+        "examples": ["pat" + "A" * 14 + "." + "a" * 64],
+        "non_examples": ["pat" + "A" * 14 + "." + "a" * 10],
+        "refs": ["https://airtable.com/developers/web/guides/personal-access-tokens"],
+        "notes": "pat<14-char id>.<64-hex secret>. Airtable documents only that PATs are 'prefixed with their ID' and are otherwise opaque/variable — the '.'+64-hex body is empirical (scanner consensus). Legacy 'key'+14 API keys were deprecated Feb 2024.",
+    },
+
+    # ---- Postman -----------------------------------------------------
+    {
+        "id": "postman-api-key",
+        "provider": "Postman",
+        "category": "Productivity",
+        "name": "API key (PMAK-)",
+        "regex": r"\bPMAK-[0-9a-f]{24}-[0-9a-f]{34}\b",
+        "strategy": "prefix",
+        "examples": ["PMAK-" + "a" * 24 + "-" + "a" * 34],
+        "non_examples": ["PMAK-" + "a" * 10],
+        "refs": ["https://learning.postman.com/docs/developer/postman-api/authentication/"],
+        "notes": "PMAK-<24-hex>-<34-hex>. Prefix appears in Postman's own docs placeholders; the two-segment hex split is scanner consensus. Collection access keys use PMAT-.",
+    },
+
+    # ---- RubyGems ----------------------------------------------------
+    {
+        "id": "rubygems-api-key",
+        "provider": "RubyGems",
+        "category": "Source / CI",
+        "name": "API key (rubygems_)",
+        "regex": r"\brubygems_[0-9a-f]{48}\b",
+        "strategy": "prefix",
+        "examples": ["rubygems_" + "a" * 48],
+        "non_examples": ["rubygems_" + "a" * 20],
+        "refs": ["https://guides.rubygems.org/api-key-scopes/"],
+        "notes": "rubygems_ + 48-hex, proven by the docs' own ~/.gem/credentials example. Pre-2021 legacy keys were bare 32-hex (only catchable via the :rubygems_api_key: YAML context).",
+    },
+
+    # ---- Dropbox -----------------------------------------------------
+    {
+        "id": "dropbox-access-token",
+        "provider": "Dropbox",
+        "category": "Productivity",
+        "name": "Short-lived access token (sl.)",
+        "regex": r"\bsl\.[A-Za-z0-9._-]{130,}",
+        "strategy": "prefix",
+        "examples": ["sl." + "A" * 140, "sl.u." + "A" * 140],
+        "non_examples": ["sl." + "A" * 20],
+        "refs": ["https://developers.dropbox.com/oauth-guide"],
+        "notes": "Short-lived (4h) OAuth tokens carry the 'sl.' prefix (Dropbox staff-confirmed); long-lived tokens are unprefixed and now deprecated. The prefix is only 3 chars, so the 130-char length floor does the disambiguation. Newer sl.u. variant adds a '.'.",
+    },
+
+    # ---- Okta --------------------------------------------------------
+    {
+        "id": "okta-api-token",
+        "provider": "Okta",
+        "category": "Cloud",
+        "name": "API token (SSWS, keyword-gated)",
+        "regex": r"(?i)(?:okta|SSWS)[\w.\-= :'\"]{0,25}(00[A-Za-z0-9_-]{40})",
+        "strategy": "keyword",
+        "examples": ["Authorization: SSWS 00" + "A" * 40],
+        "non_examples": ["okta token 00" + "A" * 10],
+        "refs": ["https://developer.okta.com/docs/guides/create-an-api-token/main/"],
+        "notes": "Okta's proprietary SSWS tokens start '00' and are ~42 chars; the middle is elided in docs, so length/charset are partly empirical. Gated on the 'SSWS' scheme keyword (or 'okta'). Tokens expire after 30 idle days.",
+    },
 ]
 
 
@@ -995,22 +1518,112 @@ def write_readme(entries, path):
     L = []
     L.append("# regextokens")
     L.append("")
-    L.append("Regex reference for scanning OAuth / API tokens and secrets. "
-             "Each entry: the pattern, a source, and caveats. "
-             "Source of truth is `patterns.json`; this file is generated from it.")
+    L.append("A sourced, tested, offline-proving scanner for OAuth / API tokens and secrets. "
+             "Every pattern is **sourced** (primary provider docs), **tested** (positive + "
+             "negative samples), and **proven** (RE2-compatible, ReDoS-checked). Ships a CLI "
+             "with confidence tiers. Source of truth is `DATA` in `build_patterns.py`; "
+             "`patterns.json` and this file are generated from it.")
     L.append("")
     L.append(f"`{len(entries)}` patterns / `{len(set(e['provider'] for e in entries))}` providers / "
              f"generated `{datetime.date.today().isoformat()}`")
     L.append("")
-    L.append("## Use")
+    L.append("## Install")
+    L.append("")
+    L.append("```")
+    L.append("pip install -e .          # console script + importable package")
+    L.append("```")
+    L.append("")
+    L.append("## Scan")
+    L.append("")
+    L.append("```")
+    L.append("regextokens scan PATH...              # walk files/dirs, report findings")
+    L.append("regextokens scan PATH -m verified     # only offline-proven findings")
+    L.append("regextokens scan PATH -f sarif        # SARIF for GitHub code scanning")
+    L.append("regextokens list                      # show the catalog")
+    L.append("```")
+    L.append("")
+    L.append("Exit status: `0` no findings, `1` findings at/above the requested tier, "
+             "`2` error. Point it at a diff or tree in CI to gate merges. Secrets are "
+             "redacted in output by default.")
+    L.append("")
+    L.append("## Baseline / allowlist")
+    L.append("")
+    L.append("Accept reviewed findings (test fixtures, docs examples) so CI only fails "
+             "on *new* secrets:")
+    L.append("")
+    L.append("```")
+    L.append("regextokens scan . --write-baseline .regextokens-baseline.json   # snapshot current findings")
+    L.append("regextokens scan . --baseline .regextokens-baseline.json         # subtract them")
+    L.append("```")
+    L.append("")
+    L.append("The baseline stores fingerprints (`sha256` of pattern id + hashed secret "
+             "body), never the secrets themselves, so it is safe to commit. Matching is "
+             "line-independent — editing above an accepted finding does not un-suppress "
+             "it — but the same token in a *different file* is a new exposure and is "
+             "reported. A hand-edited `allow` section holds policy: fnmatch path globs "
+             "and pattern ids. `--write-baseline` preserves and applies it. This repo "
+             "commits its own baseline covering the synthetic samples in "
+             "`build_patterns.py`; CI self-scans against it.")
+    L.append("")
+    L.append("## Pre-commit hook and GitHub Action")
+    L.append("")
+    L.append("```yaml")
+    L.append("# .pre-commit-config.yaml")
+    L.append("repos:")
+    L.append("  - repo: https://github.com/odomojuli/regextokens")
+    L.append("    rev: v0.2.0")
+    L.append("    hooks:")
+    L.append("      - id: regextokens")
+    L.append("```")
+    L.append("")
+    L.append("```yaml")
+    L.append("# .github/workflows/secrets.yml")
+    L.append("jobs:")
+    L.append("  secrets:")
+    L.append("    runs-on: ubuntu-latest")
+    L.append("    steps:")
+    L.append("      - uses: actions/checkout@v4")
+    L.append("      - uses: odomojuli/regextokens@main")
+    L.append("        with:")
+    L.append("          min-confidence: probable")
+    L.append("          # baseline: .regextokens-baseline.json")
+    L.append("      # optional: feed the SARIF to code scanning")
+    L.append("      # - uses: github/codeql-action/upload-sarif@v3")
+    L.append("      #   if: always()")
+    L.append("      #   with: {sarif_file: regextokens.sarif}")
+    L.append("```")
+    L.append("")
+    L.append("Both default to `-m probable`: the `low` tier includes public identifiers "
+             "and placeholders that would make a commit gate unusable.")
+    L.append("")
+    L.append("## Confidence tiers")
+    L.append("")
+    L.append("Every finding is scored by **offline proof** — local computation only, "
+             "no network, no calls to the issuer. A shape match answers *\"does this look "
+             "like a token?\"*; these checks answer *\"can we prove, locally, that it is or "
+             "isn't one?\"* Filter with `-m/--min-confidence`.")
+    L.append("")
+    L.append("- `verified-offline` — a checksum or decoder proves the structure is authentic "
+             "(GitHub/npm CRC32; empirically validated against real revoked tokens).")
+    L.append("- `probable` — structure plus a Shannon-entropy body consistent with a real secret.")
+    L.append("- `low` — shape match only; may be a placeholder or public identifier.")
+    L.append("- `rejected` — offline proof says this is provably *not* a real token "
+             "(e.g. CRC32 mismatch); dropped before it reaches you.")
+    L.append("")
+    L.append("The `rejected` tier is the differentiator: a `ghp_`/`npm_` string with a valid "
+             "prefix and length but a bad checksum is dropped with certainty, killing the "
+             "largest false-positive class for the highest-value providers. Offline proof never "
+             "claims a key is *live* — that still needs the issuer's API.")
+    L.append("")
+    L.append("## Develop")
     L.append("")
     L.append("```")
     L.append("pip install pytest")
-    L.append("pytest                 # validate every pattern against its samples")
-    L.append("python build_patterns.py   # regenerate patterns.json + readme.md")
+    L.append("pytest                     # validate every pattern + engine")
+    L.append("python build_patterns.py   # regenerate patterns.json + README.md")
     L.append("```")
     L.append("")
-    L.append("Consume the catalog:")
+    L.append("Consume the catalog directly (no engine):")
     L.append("")
     L.append("```python")
     L.append("import json, re")
@@ -1021,9 +1634,15 @@ def write_readme(entries, path):
     L.append("")
     L.append("## Files")
     L.append("")
-    L.append("- `patterns.json` — source of truth (the catalog).")
-    L.append("- `build_patterns.py` — generator + validator; rebuilds readme.md and patterns.json.")
-    L.append("- `tests/test_patterns.py` — pytest suite: compiles, matches, and RE2-checks every pattern.")
+    L.append("- `build_patterns.py` — **source of truth** (`DATA`) + validator; rebuilds patterns.json and README.md.")
+    L.append("- `patterns.json` — generated catalog (machine-readable). Never edit by hand.")
+    L.append("- `regextokens/` — installable package: `catalog` (load), `scanner` (walk/match), "
+             "`verify` (offline proof), `baseline` (accepted findings + allowlist), "
+             "`report` (human/JSON/SARIF), `cli`. Bundles a synced copy of patterns.json.")
+    L.append("- `.pre-commit-hooks.yaml` / `action.yml` / `.github/workflows/` — distribution: "
+             "pre-commit hook, composite GitHub Action, CI + tag-triggered PyPI release (trusted publishing).")
+    L.append("- `tests/` — `test_patterns.py` (every pattern: compile, match, RE2, ReDoS) and "
+             "`test_engine.py` (scanner, verify, report, CLI, catalog sync).")
     L.append("- `sniffer-audit.md` — audit of other secret scanners (verification, staleness).")
     L.append("- `references.bib` / `references.md` — bibliography of the secret-detection literature.")
     L.append("")
@@ -1093,9 +1712,20 @@ def main():
             print("  -", e)
         sys.exit(1)
     import os
+    import shutil
     here = os.path.dirname(os.path.abspath(__file__))
-    write_json(DATA, os.path.join(here, "patterns.json"))
-    write_readme(DATA, os.path.join(here, "readme.md"))
+    root_json = os.path.join(here, "patterns.json")
+    write_json(DATA, root_json)
+    # README.md (uppercase) is the canonical reference. Writing it directly
+    # avoids the readme.md/README.md case collision noted in CLAUDE.md.
+    write_readme(DATA, os.path.join(here, "README.md"))
+    # Sync the bundled package copy the scanner loads at runtime. Source of
+    # truth stays DATA; the package just carries the build output. Tests fail
+    # if this drifts (test_bundled_catalog_in_sync).
+    pkg_data_dir = os.path.join(here, "regextokens", "data")
+    if os.path.isdir(os.path.dirname(pkg_data_dir)):
+        os.makedirs(pkg_data_dir, exist_ok=True)
+        shutil.copyfile(root_json, os.path.join(pkg_data_dir, "patterns.json"))
     print(f"OK: {len(DATA)} patterns validated and written.")
     print(f"    providers: {len(set(e['provider'] for e in DATA))}")
     cats = {}

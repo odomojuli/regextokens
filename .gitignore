@@ -3,3 +3,10 @@ __pycache__/
 pytest-cache-files-*/
 *.pyc
 .DS_Store
+
+# packaging
+*.egg-info/
+build/
+dist/
+.venv/
+venv/

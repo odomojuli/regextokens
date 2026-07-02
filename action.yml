@@ -1,0 +1,85 @@
+name: regextokens
+description: >-
+  Scan for leaked API tokens and secrets with sourced, tested regex patterns,
+  scored by offline proof (checksums, decoders, entropy — no network calls).
+  Emits SARIF for GitHub code scanning.
+author: odomojuli
+branding:
+  icon: search
+  color: red
+
+inputs:
+  path:
+    description: File or directory to scan (relative to the workspace).
+    default: "."
+  min-confidence:
+    description: >-
+      Only report findings at or above this tier: low, probable, or verified.
+      Default is probable; low includes public identifiers and placeholders.
+    default: probable
+  baseline:
+    description: >-
+      Path to a .regextokens-baseline.json of accepted findings to suppress.
+      Empty (default) means no baseline.
+    default: ""
+  sarif-file:
+    description: Where to write the SARIF report.
+    default: regextokens.sarif
+  fail-on-findings:
+    description: Fail the step when findings remain after baseline filtering (true/false).
+    default: "true"
+
+outputs:
+  sarif-file:
+    description: Path to the SARIF report (feed to github/codeql-action/upload-sarif).
+    value: ${{ steps.scan.outputs.sarif-file }}
+  findings:
+    description: Number of findings reported.
+    value: ${{ steps.scan.outputs.findings }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install regextokens
+      shell: bash
+      run: python3 -m pip install --quiet "$GITHUB_ACTION_PATH"
+
+    - name: Scan
+      id: scan
+      shell: bash
+      # Inputs pass through env vars, not inline interpolation, so a crafted
+      # input can't inject shell syntax into this script.
+      env:
+        RT_PATH: ${{ inputs.path }}
+        RT_MIN_CONFIDENCE: ${{ inputs.min-confidence }}
+        RT_BASELINE: ${{ inputs.baseline }}
+        RT_SARIF_FILE: ${{ inputs.sarif-file }}
+        RT_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+      run: |
+        set -uo pipefail
+        args=(scan "$RT_PATH" -m "$RT_MIN_CONFIDENCE" -f sarif)
+        if [ -n "$RT_BASELINE" ]; then
+          args+=(--baseline "$RT_BASELINE")
+        fi
+        regextokens "${args[@]}" > "$RT_SARIF_FILE"
+        code=$?
+        if [ "$code" -eq 2 ]; then
+          echo "::error::regextokens failed to run (exit 2)" >&2
+          exit 2
+        fi
+        findings=$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["runs"][0]["results"]))' "$RT_SARIF_FILE")
+        echo "sarif-file=$RT_SARIF_FILE" >> "$GITHUB_OUTPUT"
+        echo "findings=$findings" >> "$GITHUB_OUTPUT"
+        {
+          echo "### regextokens"
+          echo ""
+          if [ "$findings" -eq 0 ]; then
+            echo "No findings at or above \`$RT_MIN_CONFIDENCE\`."
+          else
+            echo "**$findings finding(s)** at or above \`$RT_MIN_CONFIDENCE\` — see \`$RT_SARIF_FILE\` (locations withheld from the log; secrets are redacted in the SARIF)."
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"
+        if [ "$findings" -gt 0 ] && [ "$RT_FAIL_ON_FINDINGS" = "true" ]; then
+          echo "::error::regextokens found $findings potential secret(s); see $RT_SARIF_FILE" >&2
+          exit 1
+        fi

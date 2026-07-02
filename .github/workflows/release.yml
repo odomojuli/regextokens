@@ -1,0 +1,54 @@
+# Publish to PyPI on a version tag (v0.2.0, v1.0.0, ...).
+#
+# Uses PyPI *trusted publishing* (OIDC) — no API token stored in the repo.
+# One-time setup on pypi.org: project "regextokens" -> Publishing ->
+# add GitHub publisher: owner `odomojuli`, repo `regextokens`,
+# workflow `release.yml`, environment `pypi`.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Guard — tag matches package version
+        run: |
+          pkg=$(python -c "import regextokens; print(regextokens.__version__)")
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$pkg" != "$tag" ]; then
+            echo "::error::tag v$tag != regextokens.__version__ $pkg" >&2
+            exit 1
+          fi
+      - name: Test before shipping
+        run: |
+          python -m pip install -e ".[test]"
+          pytest -q
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install build twine
+          python -m build
+          python -m twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

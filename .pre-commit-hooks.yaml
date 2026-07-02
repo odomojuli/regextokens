@@ -1,0 +1,23 @@
+# Hook definition consumed by pre-commit (https://pre-commit.com).
+# Users reference this repo in their .pre-commit-config.yaml:
+#
+#   repos:
+#     - repo: https://github.com/odomojuli/regextokens
+#       rev: v0.2.0
+#       hooks:
+#         - id: regextokens
+#           # optional overrides:
+#           # args: ["-m", "verified"]                                  # stricter tier
+#           # args: ["-m", "probable", "--baseline", ".regextokens-baseline.json"]
+#
+# pre-commit passes staged filenames to `regextokens scan`; exit 1 on findings
+# blocks the commit. Default tier is `probable`: the `low` tier includes public
+# identifiers (usernames, key IDs) that would make a commit gate unusable.
+- id: regextokens
+  name: regextokens secret scan
+  description: Scan staged files for API tokens and secrets, scored by offline proof (no network).
+  entry: regextokens scan
+  args: ["-m", "probable"]
+  language: python
+  types: [text]
+  exclude: '(^|/)\.regextokens-baseline\.json$'
